@@ -63,18 +63,39 @@ async function fetchGpuStatus() {
             if (gpuText) {
                 gpuText.innerText = data.available ? `${data.name} (${data.driver_ver})` : "Không tìm thấy GPU";
             }
+            
+            // Calculate VRAM percentage
+            let vramPct = 0;
+            const usedMatch = (data.vram_used || "").match(/(\d+)/);
+            const totalMatch = (data.vram_total || "").match(/(\d+)/);
+            if (usedMatch && totalMatch) {
+                const used = parseFloat(usedMatch[1]);
+                const total = parseFloat(totalMatch[1]);
+                if (total > 0) {
+                    vramPct = Math.round((used / total) * 100);
+                }
+            }
+
             // Update modal fields
             const mName = document.getElementById("modal-gpu-name");
             const mDriver = document.getElementById("modal-gpu-driver");
             const mVram = document.getElementById("modal-gpu-vram");
             const mTemp = document.getElementById("modal-gpu-temp");
-            const mRaw = document.getElementById("modal-nvidia-raw");
+            const mUtil = document.getElementById("modal-gpu-util");
+            const mPower = document.getElementById("modal-gpu-power");
+            const mVramBar = document.getElementById("modal-gpu-vram-bar");
+            const mVramPct = document.getElementById("modal-gpu-vram-pct");
+            const mStatus = document.getElementById("modal-gpu-status-text");
 
             if (mName) mName.innerText = data.name;
             if (mDriver) mDriver.innerText = data.driver_ver;
             if (mVram) mVram.innerText = `${data.vram_used} / ${data.vram_total}`;
             if (mTemp) mTemp.innerText = data.temperature;
-            if (mRaw) mRaw.innerText = data.raw_output || "Không có thông tin.";
+            if (mUtil) mUtil.innerText = data.gpu_util || "0%";
+            if (mPower) mPower.innerText = data.power || "N/A";
+            if (mVramBar) mVramBar.style.width = vramPct + "%";
+            if (mVramPct) mVramPct.innerText = vramPct + "%";
+            if (mStatus) mStatus.innerText = data.available ? "Đang hoạt động" : "Không tìm thấy GPU";
         }
     } catch (e) {
         console.error("Lỗi lấy thông tin GPU:", e);
