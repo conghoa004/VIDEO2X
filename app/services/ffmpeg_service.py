@@ -34,7 +34,7 @@ class FFmpegService:
             cmd = [
                 "ffprobe", "-v", "error",
                 "-select_streams", "v:0",
-                "-show_entries", "stream=width,height,r_frame_rate,duration,codec_name",
+                "-show_entries", "stream=width,height,r_frame_rate,duration,codec_name:format=duration",
                 "-of", "json",
                 str(path)
             ]
@@ -60,7 +60,7 @@ class FFmpegService:
                             meta.fps_val = round(fps_calc, 2)
                             meta.fps = f"{fps_calc:.2f} FPS"
 
-                    dur = s.get("duration")
+                    dur = s.get("duration") or data.get("format", {}).get("duration")
                     if dur:
                         dur_float = float(dur)
                         meta.duration_val = round(dur_float, 2)

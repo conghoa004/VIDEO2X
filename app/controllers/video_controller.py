@@ -55,7 +55,7 @@ async def probe_video_path(req: ProbeRequest):
 
 
 @router.get("/stream/{filename}")
-async def stream_video(filename: str, type: str = Query(default="output", regex="^(input|output)$")):
+async def stream_video(filename: str, type: str = Query(default="output", pattern="^(input|output)$")):
     """Phát video trực tiếp với hỗ trợ xem trước trên trình duyệt."""
     target_dir = OUTPUT_DIR if type == "output" else INPUT_DIR
     target_path = target_dir / filename
@@ -71,7 +71,7 @@ async def stream_video(filename: str, type: str = Query(default="output", regex=
 
 
 @router.get("/download/{filename}")
-async def download_video(filename: str, type: str = Query(default="output", regex="^(input|output)$")):
+async def download_video(filename: str, type: str = Query(default="output", pattern="^(input|output)$")):
     """Tải file video về máy tính cá nhân dưới dạng attachment."""
     target_dir = OUTPUT_DIR if type == "output" else INPUT_DIR
     target_path = target_dir / filename

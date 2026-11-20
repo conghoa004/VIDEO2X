@@ -1,6 +1,7 @@
 import os
 import re
 import time
+import shlex
 import asyncio
 import pathlib
 import subprocess
@@ -99,6 +100,7 @@ class Video2XService:
         """
         self.is_aborted = False
         self.is_running = True
+        self.latest_progress = TaskProgress(is_running=True, status_text="Đang chuẩn bị...")
         self.latest_result = None
         self.log_history.clear()
 
@@ -117,7 +119,6 @@ class Video2XService:
         output_file = self.output_dir / out_filename
 
         cmd = self.build_command(opt, output_file)
-        import shlex
         cmd_str = " ".join(shlex.quote(c) for c in cmd)
 
         start_log = f"🚀 Khởi chạy: {cmd_str}\n" + "-" * 60
@@ -157,7 +158,7 @@ class Video2XService:
             r"frame=(\d+)/(\d+)\s*\(([\d\.]+)%\);\s*fps=([\d\.]+);\s*elapsed=([^;]+);\s*remaining=([^\r\n]+)"
         )
 
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         last_progress_yield = 0
 
         while True:

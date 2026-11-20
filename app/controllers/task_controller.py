@@ -66,20 +66,22 @@ async def sse_event_stream():
     subscribers.append(q)
 
     async def event_generator() -> AsyncGenerator[str, None]:
-        if video2x_service.is_running:
-            cur = video2x_service.latest_progress.model_dump()
-            yield f"event: progress\ndata: {json.dumps(cur)}\n\n"
-
-        for log_line in list(video2x_service.log_history)[-30:]:
-            yield f"event: log\ndata: {json.dumps({'text': log_line})}\n\n"
-
         try:
+            if video2x_service.is_running:
+                cur = video2x_service.latest_progress.model_dump()
+                yield f"event: progress\ndata: {json.dumps(cur)}\n\n"
+
+            for log_line in list(video2x_service.log_history)[-30:]:
+                yield f"event: log\ndata: {json.dumps({'text': log_line})}\n\n"
+
             while True:
                 item = await q.get()
                 ev_type = item.get("event", "message")
                 ev_data = item.get("data", {})
                 yield f"event: {ev_type}\ndata: {json.dumps(ev_data)}\n\n"
         except asyncio.CancelledError:
+            pass
+        finally:
             if q in subscribers:
                 subscribers.remove(q)
 
