@@ -3,8 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Video2X AI Studio{% endblock %}</title>
+    <title>{% block title %}Video2X AI Studio — Trạm Xử Lý Video AI Chuyên Nghiệp{% endblock %}</title>
     
+    <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
     <!-- Official TailwindCSS CDN with Custom Config -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -12,17 +17,24 @@
             darkMode: 'class',
             theme: {
                 extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
                     colors: {
                         slate: {
-                            850: '#151e2e',
-                            950: '#070d18'
+                            850: '#111827',
+                            900: '#0f172a',
+                            950: '#030712'
                         },
                         brand: {
+                            400: '#34d399',
                             500: '#10b981',
                             600: '#059669',
                             700: '#047857'
                         },
                         accent: {
+                            400: '#38bdf8',
                             500: '#0ea5e9',
                             600: '#0284c7',
                             700: '#0369a1'
@@ -39,34 +51,62 @@
     <!-- Custom Style -->
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-accent-500 selection:text-white">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-accent-500 selection:text-white antialiased">
 
     <!-- Top Navigation Bar -->
-    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+    <header class="border-b border-slate-800/80 bg-slate-900/80 backdrop-blur-md sticky top-0 z-50 transition-all">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-accent-600 to-brand-500 flex items-center justify-center shadow-lg shadow-accent-500/20">
+            
+            <!-- Brand Logo -->
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-accent-600 via-brand-500 to-accent-400 flex items-center justify-center shadow-lg shadow-accent-500/25 ring-1 ring-white/20">
                     <i data-lucide="sparkles" class="w-5 h-5 text-white"></i>
                 </div>
                 <div>
-                    <span class="font-bold text-lg tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">Video2X AI Studio</span>
-                    <span class="ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-accent-500/10 text-accent-400 border border-accent-500/20">v6.2.0 C++</span>
+                    <div class="flex items-center space-x-2">
+                        <span class="font-extrabold text-lg tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">Video2X AI Studio</span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-accent-500/10 text-accent-400 border border-accent-500/20">v6.2.0</span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 hidden sm:block">AI Super-Resolution & Optical Flow Frame Interpolation</p>
                 </div>
             </div>
 
-            <!-- Header System Badges -->
-            <div class="hidden md:flex items-center space-x-3 text-xs" id="nav-system-badges">
-                <div class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700/60" id="badge-gpu">
-                    <i data-lucide="cpu" class="w-3.5 h-3.5 text-brand-500"></i>
-                    <span class="text-slate-300" id="gpu-text">Đang kiểm tra GPU...</span>
+            <!-- Header System Status & Controls -->
+            <div class="flex items-center space-x-2 sm:space-x-3 text-xs" id="nav-system-badges">
+                
+                <!-- System Live Status Pill -->
+                <div id="badge-status-pill" class="hidden sm:flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-emerald-950/40 border border-emerald-800/60 text-emerald-300">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span class="font-semibold" id="header-status-text">Sẵn sàng</span>
                 </div>
-                <div class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700/60" id="badge-vulkan">
-                    <i data-lucide="zap" class="w-3.5 h-3.5 text-accent-500"></i>
-                    <span class="text-slate-300" id="vulkan-text">Vulkan API</span>
+
+                <!-- GPU Status -->
+                <div class="hidden md:flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 transition" id="badge-gpu">
+                    <i data-lucide="cpu" class="w-3.5 h-3.5 text-brand-400"></i>
+                    <span class="text-slate-300 font-medium" id="gpu-text">Kiểm tra GPU...</span>
                 </div>
-                <button onclick="openSystemModal()" class="flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition border border-slate-700">
+
+                <!-- Vulkan Status -->
+                <div class="hidden lg:flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800" id="badge-vulkan">
+                    <i data-lucide="zap" class="w-3.5 h-3.5 text-accent-400"></i>
+                    <span class="text-slate-300 font-medium" id="vulkan-text">Vulkan API</span>
+                </div>
+
+                <!-- Disk Space Status -->
+                <div class="hidden xl:flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800" id="badge-disk">
+                    <i data-lucide="hard-drive" class="w-3.5 h-3.5 text-slate-400"></i>
+                    <span class="text-slate-300 font-medium" id="disk-text">Disk: -- GB</span>
+                </div>
+
+                <!-- Hardware Modal Trigger -->
+                <button onclick="openSystemModal()" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white transition border border-slate-700 shadow-sm active:scale-95" title="Chi tiết phần cứng GPU">
                     <i data-lucide="activity" class="w-3.5 h-3.5 text-amber-400"></i>
-                    <span>Phần cứng</span>
+                    <span class="hidden sm:inline font-medium">Phần cứng</span>
+                </button>
+
+                <!-- Help Guide Trigger -->
+                <button onclick="openHelpModal()" class="flex items-center justify-center w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition border border-slate-700 active:scale-95" title="Hướng dẫn sử dụng & Mẹo">
+                    <i data-lucide="help-circle" class="w-4 h-4"></i>
                 </button>
             </div>
         </div>
@@ -78,12 +118,83 @@
     </main>
 
     <!-- Footer -->
-    <footer class="border-t border-slate-900 bg-slate-950 py-4 text-center text-xs text-slate-500">
-        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-            <span>Video2X Powered by <b>K4YT3X</b> &bull; Real-ESRGAN &bull; Anime4K &bull; RIFE</span>
-            <span>FastAPI + TailwindCSS + Lucide MVC Architecture</span>
+    <footer class="border-t border-slate-900/80 bg-slate-950 py-5 text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="flex items-center space-x-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <span>Video2X Powered by <b>K4YT3X</b> &bull; Real-ESRGAN &bull; Anime4K &bull; RIFE Optical Flow</span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span>FastAPI + TailwindCSS + Lucide MVC</span>
+                <span class="text-slate-700">&bull;</span>
+                <span class="text-slate-400">Kaggle GPU Optimized</span>
+            </div>
         </div>
     </footer>
+
+    <!-- Help Modal -->
+    <div id="help-modal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="text-base font-bold text-white flex items-center space-x-2">
+                    <i data-lucide="book-open" class="w-5 h-5 text-accent-400"></i>
+                    <span>Hướng Dẫn Sử Dụng & Mẹo Tối Ưu</span>
+                </h3>
+                <button onclick="closeHelpModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4 text-xs text-slate-300 leading-relaxed">
+                <div class="p-3.5 bg-slate-950 rounded-xl border border-slate-800/80">
+                    <h4 class="font-bold text-accent-400 flex items-center space-x-1.5 mb-1.5 text-sm">
+                        <i data-lucide="sparkles" class="w-4 h-4"></i>
+                        <span>1. Chọn mô hình tối ưu theo loại video:</span>
+                    </h4>
+                    <ul class="list-disc list-inside space-y-1 text-slate-400 pl-1">
+                        <li><strong class="text-slate-200">Phim Hoạt Hình / Anime:</strong> Dùng <em>realesr-animevideov3</em> (nét mượt, cân bằng tốc độ) hoặc <em>Anime4K</em> nếu cần render siêu tốc.</li>
+                        <li><strong class="text-slate-200">Video Người Thật / Cảnh Đời Thực:</strong> Dùng <em>realesrgan-plus</em> (phóng to 4x).</li>
+                        <li><strong class="text-slate-200">Tăng FPS Mượt (30fps ➡️ 60fps):</strong> Dùng <em>RIFE v4.6</em>.</li>
+                    </ul>
+                </div>
+
+                <div class="p-3.5 bg-slate-950 rounded-xl border border-slate-800/80">
+                    <h4 class="font-bold text-brand-400 flex items-center space-x-1.5 mb-1.5 text-sm">
+                        <i data-lucide="zap" class="w-4 h-4"></i>
+                        <span>2. Bộ mã hóa xuất file (FFmpeg Encoder):</span>
+                    </h4>
+                    <ul class="list-disc list-inside space-y-1 text-slate-400 pl-1">
+                        <li><strong>libx264 (CPU):</strong> Chất lượng hình ảnh tốt nhất, tương thích mọi trình duyệt và thiết bị di động.</li>
+                        <li><strong>h264_nvenc (NVIDIA):</strong> Sử dụng chip phần cứng GPU để nén nhanh hơn gấp 2-3 lần.</li>
+                        <li><strong>CRF 18:</strong> Mức chất lượng chuẩn điện ảnh (mắt thường không phân biệt được so với gốc).</li>
+                    </ul>
+                </div>
+
+                <div class="p-3.5 bg-slate-950 rounded-xl border border-slate-800/80">
+                    <h4 class="font-bold text-amber-400 flex items-center space-x-1.5 mb-1.5 text-sm">
+                        <i data-lucide="keyboard" class="w-4 h-4"></i>
+                        <span>3. Phím tắt tiện lợi:</span>
+                    </h4>
+                    <div class="grid grid-cols-2 gap-2 mt-2 font-mono">
+                        <div class="p-2 bg-slate-900 rounded-lg border border-slate-800 flex justify-between">
+                            <span>Bắt đầu xử lý:</span>
+                            <span class="text-accent-400 font-bold">Ctrl + Enter</span>
+                        </div>
+                        <div class="p-2 bg-slate-900 rounded-lg border border-slate-800 flex justify-between">
+                            <span>Đóng cửa sổ / Hủy:</span>
+                            <span class="text-red-400 font-bold">Esc</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-2 border-t border-slate-800">
+                <button onclick="closeHelpModal()" class="px-4 py-2 bg-accent-600 hover:bg-accent-500 text-white rounded-xl text-xs font-semibold transition">
+                    Đã hiểu
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Scripts -->
     <script src="/static/js/app.js"></script>

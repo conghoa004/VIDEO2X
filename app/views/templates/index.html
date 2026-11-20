@@ -1,352 +1,447 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+<div class="space-y-6">
 
     <!-- ========================================== -->
-    <!-- CỘT TRÁI: ĐẦU VÀO VÀ CẤU HÌNH (5 Columns)  -->
+    <!-- QUICK PRESETS BAR: 1-CLICK TỐI ƯU CẤU HÌNH -->
     <!-- ========================================== -->
-    <div class="lg:col-span-5 space-y-5">
-
-        <!-- Card 1: Chọn video nguồn -->
-        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl shadow-black/20 backdrop-blur">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-base font-semibold text-white flex items-center space-x-2">
-                    <i data-lucide="video" class="w-4 h-4 text-accent-500"></i>
-                    <span>1. Chọn video nguồn</span>
-                </h2>
-                <!-- Nút chuyển chế độ nạp -->
-                <div class="flex bg-slate-800 p-0.5 rounded-lg text-xs font-medium">
-                    <button type="button" id="tab-btn-upload" onclick="switchInputMode('upload')" class="px-2.5 py-1 rounded-md bg-accent-600 text-white transition">Tải lên</button>
-                    <button type="button" id="tab-btn-path" onclick="switchInputMode('path')" class="px-2.5 py-1 rounded-md text-slate-400 hover:text-white transition">Đường dẫn</button>
+    <div class="glass-panel rounded-2xl p-4 shadow-xl border border-slate-800/80">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 rounded-lg bg-accent-500/10 flex items-center justify-center text-accent-400">
+                    <i data-lucide="wand-2" class="w-4 h-4"></i>
+                </div>
+                <div>
+                    <h2 class="text-xs font-bold text-slate-200 uppercase tracking-wider">Cấu Hình Nhanh (1-Click Presets)</h2>
+                    <p class="text-[11px] text-slate-400">Tự động chọn mô hình AI & tham số tối ưu nhất</p>
                 </div>
             </div>
-
-            <!-- Cách A: Tải file từ máy tính -->
-            <div id="input-section-upload" class="space-y-3">
-                <div id="dropzone" class="border-2 border-dashed border-slate-700 hover:border-accent-500/80 rounded-xl p-6 text-center cursor-pointer transition bg-slate-950/40 hover:bg-slate-950/70 group">
-                    <input type="file" id="video-file-input" accept=".mp4,.mkv,.avi,.mov,.webm,.flv,.ts" class="hidden" onchange="handleFileSelect(event)">
-                    <div class="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 group-hover:bg-accent-500/20 transition">
-                        <i data-lucide="upload-cloud" class="w-6 h-6 text-slate-400 group-hover:text-accent-400"></i>
-                    </div>
-                    <p class="text-sm font-medium text-slate-200">Kéo & thả video vào đây, hoặc <span class="text-accent-400 underline">chọn từ thiết bị</span></p>
-                    <p class="text-xs text-slate-500 mt-1">Hỗ trợ MP4, MKV, AVI, MOV, WEBM (Tối đa 1GB+)</p>
-                </div>
-                <!-- Progress bar upload file -->
-                <div id="upload-progress-container" class="hidden space-y-1.5">
-                    <div class="flex justify-between text-xs text-slate-400">
-                        <span id="upload-filename">Đang tải lên...</span>
-                        <span id="upload-percent">0%</span>
-                    </div>
-                    <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
-                        <div id="upload-progress-bar" class="bg-accent-500 h-2 rounded-full transition-all duration-200" style="width: 0%"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Cách B: Nhập đường dẫn trên server (Kaggle Dataset) -->
-            <div id="input-section-path" class="hidden space-y-3">
-                <div class="flex space-x-2">
-                    <div class="relative flex-1">
-                        <i data-lucide="folder" class="w-4 h-4 text-slate-500 absolute left-3 top-3"></i>
-                        <input type="text" id="dataset-filepath-input" placeholder="/kaggle/input/.../video.mp4" class="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm focus:outline-none focus:border-accent-500 text-slate-200 placeholder:text-slate-600">
-                    </div>
-                    <button type="button" onclick="probeVideoPath()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition">
-                        <i data-lucide="search" class="w-3.5 h-3.5"></i>
-                        <span>Kiểm tra</span>
-                    </button>
-                </div>
-                <p class="text-xs text-slate-500">Phù hợp cho các video dung lượng lớn có sẵn trong Kaggle Datasets hoặc thư mục input.</p>
-            </div>
-
-            <!-- Video Metadata Badge Card -->
-            <div id="video-meta-card" class="mt-4 hidden p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 flex items-center justify-between text-xs">
-                <div class="flex items-center space-x-3 overflow-hidden">
-                    <div class="w-9 h-9 rounded-lg bg-accent-500/10 flex items-center justify-center shrink-0">
-                        <i data-lucide="film" class="w-5 h-5 text-accent-400"></i>
-                    </div>
-                    <div class="truncate">
-                        <p id="meta-filename" class="font-semibold text-slate-200 truncate">video.mp4</p>
-                        <p class="text-slate-400 text-[11px]">
-                            <span id="meta-res">1920x1080</span> &bull; 
-                            <span id="meta-fps">30 FPS</span> &bull; 
-                            <span id="meta-dur">0s</span> &bull; 
-                            <span id="meta-size" class="text-accent-400 font-medium">0 MB</span>
-                        </p>
-                    </div>
-                </div>
-                <button type="button" onclick="clearSelectedVideo()" class="text-slate-500 hover:text-red-400 p-1" title="Xóa video đã chọn">
-                    <i data-lucide="x" class="w-4 h-4"></i>
+            
+            <!-- Preset Buttons -->
+            <div class="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
+                <button type="button" onclick="applyPreset('anime_hq')" class="preset-btn px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-xs font-medium text-slate-200 hover:text-accent-400 transition flex items-center space-x-1.5 active:scale-95">
+                    <span>✨ Anime 4K (Nét Cao)</span>
+                </button>
+                <button type="button" onclick="applyPreset('anime_fast')" class="preset-btn px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-xs font-medium text-slate-200 hover:text-accent-400 transition flex items-center space-x-1.5 active:scale-95">
+                    <span>⚡ Anime Siêu Tốc</span>
+                </button>
+                <button type="button" onclick="applyPreset('real_life')" class="preset-btn px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-xs font-medium text-slate-200 hover:text-brand-400 transition flex items-center space-x-1.5 active:scale-95">
+                    <span>🎬 Đời Thực 4K</span>
+                </button>
+                <button type="button" onclick="applyPreset('rife_60fps')" class="preset-btn px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-xs font-medium text-slate-200 hover:text-amber-400 transition flex items-center space-x-1.5 active:scale-95">
+                    <span>🚀 Tăng 60 FPS Mượt</span>
                 </button>
             </div>
         </div>
-
-        <!-- Card 2: Cấu hình Mô hình AI & Chế độ xử lý -->
-        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl shadow-black/20 backdrop-blur">
-            <h2 class="text-base font-semibold text-white flex items-center space-x-2 mb-4">
-                <i data-lucide="cpu" class="w-4 h-4 text-brand-500"></i>
-                <span>2. Chọn chế độ & Mô hình AI</span>
-            </h2>
-
-            <!-- Task Mode Selector -->
-            <div class="grid grid-cols-3 gap-2 p-1 bg-slate-950 rounded-xl mb-4 text-xs font-semibold">
-                <button type="button" onclick="selectTaskMode('realesrgan')" id="mode-btn-realesrgan" class="py-2.5 rounded-lg bg-accent-600 text-white transition text-center flex flex-col items-center">
-                    <span>Real-ESRGAN</span>
-                    <span class="text-[10px] opacity-80 font-normal">Deep Learning</span>
-                </button>
-                <button type="button" onclick="selectTaskMode('libplacebo')" id="mode-btn-libplacebo" class="py-2.5 rounded-lg text-slate-400 hover:text-white transition text-center flex flex-col items-center">
-                    <span>Anime4K</span>
-                    <span class="text-[10px] opacity-80 font-normal">Shader Siêu Tốc</span>
-                </button>
-                <button type="button" onclick="selectTaskMode('rife')" id="mode-btn-rife" class="py-2.5 rounded-lg text-slate-400 hover:text-white transition text-center flex flex-col items-center">
-                    <span>RIFE</span>
-                    <span class="text-[10px] opacity-80 font-normal">Tăng Mượt FPS</span>
-                </button>
-            </div>
-
-            <!-- Group A: Real-ESRGAN Settings -->
-            <div id="group-realesrgan" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1.5">Mô hình Real-ESRGAN:</label>
-                    <select id="realesrgan-model" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-accent-500">
-                        <option value="realesr-animevideov3">realesr-animevideov3 (Anime / Hoạt hình - Nhanh, mượt)</option>
-                        <option value="realesrgan-plus-anime">realesrgan-plus-anime (Anime nét cực cao - Chỉ 4x)</option>
-                        <option value="realesrgan-plus">realesrgan-plus (Người thật / Cảnh đời thực - 4x)</option>
-                    </select>
-                </div>
-                <div>
-                    <div class="flex justify-between text-xs font-medium text-slate-300 mb-1.5">
-                        <span>Hệ số phóng to (Scaling Factor):</span>
-                        <span id="scale-badge" class="text-accent-400 font-bold">4x</span>
-                    </div>
-                    <div class="grid grid-cols-3 gap-2">
-                        <button type="button" onclick="setScale(2)" class="scale-btn py-1.5 rounded-lg border border-slate-700 bg-slate-950 text-xs font-semibold text-slate-300 hover:border-accent-500" data-scale="2">2x</button>
-                        <button type="button" onclick="setScale(3)" class="scale-btn py-1.5 rounded-lg border border-slate-700 bg-slate-950 text-xs font-semibold text-slate-300 hover:border-accent-500" data-scale="3">3x</button>
-                        <button type="button" onclick="setScale(4)" class="scale-btn py-1.5 rounded-lg border border-accent-500 bg-accent-600/20 text-xs font-semibold text-accent-400" data-scale="4">4x (Khuyên dùng)</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Group B: Anime4K Settings -->
-            <div id="group-libplacebo" class="hidden space-y-4">
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1.5">Shader Anime4K GLSL:</label>
-                    <select id="anime4k-shader" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-accent-500">
-                        <option value="anime4k-v4-a">anime4k-v4-a (Tối ưu cho Anime 1080p)</option>
-                        <option value="anime4k-v4-b">anime4k-v4-b (Tối ưu cho Anime 720p)</option>
-                        <option value="anime4k-v4-c">anime4k-v4-c (Tối ưu cho Anime 480p)</option>
-                        <option value="anime4k-v4-a+a">anime4k-v4-a+a (Chất lượng cao Mode A)</option>
-                        <option value="anime4k-v4.1-gan">anime4k-v4.1-gan (Chất lượng tối đa, chạy chậm hơn)</option>
-                    </select>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">Rộng (px):</label>
-                        <input type="number" id="target-width" value="0" placeholder="0 = Tự động" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-200">
-                    </div>
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">Cao (px):</label>
-                        <input type="number" id="target-height" value="0" placeholder="0 = Tự động" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-200">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Group C: RIFE Settings -->
-            <div id="group-rife" class="hidden space-y-4">
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1.5">Mô hình RIFE:</label>
-                    <select id="rife-model" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-accent-500">
-                        <option value="rife-v4.6">rife-v4.6 (Phiên bản mới & mượt nhất)</option>
-                        <option value="rife-anime">rife-anime (Chuyên dụng cho phim Anime)</option>
-                        <option value="rife-v4">rife-v4 (Bản ổn định)</option>
-                        <option value="rife-UHD">rife-UHD (Độ phân giải 4K UHD)</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1.5">Hệ số nhân khung hình:</label>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button type="button" onclick="setRifeMul(2)" class="rife-mul-btn py-2 rounded-lg border border-accent-500 bg-accent-600/20 text-xs font-semibold text-accent-400" data-mul="2">2x (30fps ➡️ 60fps)</button>
-                        <button type="button" onclick="setRifeMul(4)" class="rife-mul-btn py-2 rounded-lg border border-slate-700 bg-slate-950 text-xs font-semibold text-slate-300" data-mul="4">4x (30fps ➡️ 120fps)</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Card 3: Cấu hình FFmpeg nén video (Nâng cao) -->
-        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl shadow-black/20 backdrop-blur">
-            <button type="button" onclick="toggleAccordion('encoder-options')" class="w-full flex items-center justify-between text-left">
-                <span class="text-sm font-semibold text-white flex items-center space-x-2">
-                    <i data-lucide="sliders" class="w-4 h-4 text-amber-400"></i>
-                    <span>3. Cấu hình nén FFmpeg (Nâng cao)</span>
-                </span>
-                <i data-lucide="chevron-down" id="accordion-icon-encoder-options" class="w-4 h-4 text-slate-400 transition-transform"></i>
-            </button>
-
-            <div id="encoder-options" class="hidden mt-4 pt-4 border-t border-slate-800 space-y-4">
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">Bộ mã hóa (Codec):</label>
-                        <select id="encoder-codec" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-slate-200">
-                            <option value="libx264">libx264 (CPU H.264 - Nét cao)</option>
-                            <option value="h264_nvenc">h264_nvenc (NVIDIA GPU Hardware)</option>
-                            <option value="libx265">libx265 (HEVC - Dung lượng nhẹ)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">Tốc độ nén (Preset):</label>
-                        <select id="encoder-preset" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-slate-200">
-                            <option value="slow">slow (Khuyên dùng tối ưu)</option>
-                            <option value="medium">medium (Cân bằng)</option>
-                            <option value="fast">fast (Nhanh hơn)</option>
-                            <option value="ultrafast">ultrafast (Siêu tốc)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div>
-                    <div class="flex justify-between text-xs text-slate-300 mb-1">
-                        <span>Chỉ số chất lượng CRF:</span>
-                        <span id="crf-value-badge" class="text-accent-400 font-bold">18 (Rất nét)</span>
-                    </div>
-                    <input type="range" id="encoder-crf" min="14" max="28" step="1" value="18" oninput="updateCrfLabel(this.value)" class="w-full accent-accent-500 cursor-pointer">
-                    <div class="flex justify-between text-[10px] text-slate-500">
-                        <span>14 (Lossless/Nặng)</span>
-                        <span>18 (Chuẩn đẹp)</span>
-                        <span>28 (Nhẹ/Nén sâu)</span>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">Pixel Format:</label>
-                        <select id="encoder-pixfmt" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-slate-200">
-                            <option value="yuv420p">yuv420p (Chuẩn tương thích web/máy)</option>
-                            <option value="auto">auto (Theo video nguồn)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">Bitrate (0 = dùng CRF):</label>
-                        <input type="number" id="encoder-bitrate" value="0" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-slate-200">
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Action Control Buttons -->
-        <div class="flex space-x-3">
-            <button type="button" id="btn-start" onclick="startProcessing()" class="flex-1 py-3.5 px-6 rounded-xl bg-gradient-to-r from-brand-600 to-accent-600 hover:from-brand-500 hover:to-accent-500 text-white font-bold text-sm shadow-lg shadow-brand-500/25 flex items-center justify-center space-x-2 transition active:scale-[0.98]">
-                <i data-lucide="play" class="w-4 h-4 fill-white"></i>
-                <span>BẮT ĐẦU XỬ LÝ</span>
-            </button>
-            <button type="button" id="btn-abort" onclick="abortProcessing()" disabled class="py-3.5 px-5 rounded-xl bg-slate-800 text-slate-500 font-semibold text-sm flex items-center justify-center space-x-2 transition cursor-not-allowed">
-                <i data-lucide="square" class="w-4 h-4"></i>
-                <span>Dừng</span>
-            </button>
-        </div>
-
     </div>
 
     <!-- ========================================== -->
-    <!-- CỘT PHẢI: TIẾN TRÌNH & KẾT QUẢ (7 Columns) -->
+    <!-- MAIN GRID 2 CỘT (Cột trái 5 col, Cột phải 7 col) -->
     <!-- ========================================== -->
-    <div class="lg:col-span-7 space-y-5">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-        <!-- Card 4: Tiến độ thời gian thực -->
-        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl shadow-black/20 backdrop-blur">
-            <h2 class="text-base font-semibold text-white flex items-center justify-between mb-4">
-                <span class="flex items-center space-x-2">
-                    <i data-lucide="gauge" class="w-4 h-4 text-accent-500"></i>
-                    <span>Tiến độ xử lý thời gian thực</span>
-                </span>
-                <span id="progress-percent-badge" class="text-xs font-bold px-2.5 py-1 rounded-full bg-slate-800 text-slate-400">0%</span>
-            </h2>
+        <!-- ========================================== -->
+        <!-- CỘT TRÁI: ĐẦU VÀO & CẤU HÌNH (5 Columns)   -->
+        <!-- ========================================== -->
+        <div class="lg:col-span-5 space-y-5">
 
-            <!-- Main Progress Bar -->
-            <div class="space-y-2 mb-4">
-                <div class="w-full bg-slate-950 rounded-full h-3.5 p-0.5 border border-slate-800 overflow-hidden">
-                    <div id="main-progress-bar" class="h-full rounded-full bg-gradient-to-r from-accent-500 via-brand-500 to-accent-400 transition-all duration-300 progress-glow" style="width: 0%"></div>
+            <!-- Card 1: Chọn video nguồn -->
+            <div class="glass-panel rounded-2xl p-5 shadow-xl shadow-black/20">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-sm font-bold text-white flex items-center space-x-2">
+                        <span class="w-6 h-6 rounded-lg bg-accent-500/20 text-accent-400 flex items-center justify-center text-xs font-black">1</span>
+                        <span>Chọn video đầu vào</span>
+                    </h2>
+                    <!-- Chuyển chế độ nạp -->
+                    <div class="flex bg-slate-950 p-1 rounded-xl text-xs font-medium border border-slate-800">
+                        <button type="button" id="tab-btn-upload" onclick="switchInputMode('upload')" class="px-3 py-1 rounded-lg bg-accent-600 text-white font-semibold transition shadow-sm">Tải lên</button>
+                        <button type="button" id="tab-btn-path" onclick="switchInputMode('path')" class="px-3 py-1 rounded-lg text-slate-400 hover:text-white transition">Đường dẫn server</button>
+                    </div>
+                </div>
+
+                <!-- Cách A: Tải file từ máy tính -->
+                <div id="input-section-upload" class="space-y-3">
+                    <div id="dropzone" class="border-2 border-dashed border-slate-700/90 hover:border-accent-500 rounded-2xl p-7 text-center cursor-pointer transition-all bg-slate-950/40 hover:bg-slate-950/80 group relative overflow-hidden">
+                        <input type="file" id="video-file-input" accept=".mp4,.mkv,.avi,.mov,.webm,.flv,.ts" class="hidden" onchange="handleFileSelect(event)">
+                        <div class="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 group-hover:border-accent-500/50 group-hover:bg-accent-500/10 transition duration-300">
+                            <i data-lucide="upload-cloud" class="w-7 h-7 text-slate-400 group-hover:text-accent-400 transition"></i>
+                        </div>
+                        <p class="text-sm font-semibold text-slate-200">Kéo & thả video vào đây, hoặc <span class="text-accent-400 underline decoration-accent-500/40 decoration-2 underline-offset-2">chọn từ máy tính</span></p>
+                        <p class="text-[11px] text-slate-500 mt-1.5">MP4, MKV, AVI, MOV, WEBM (Hỗ trợ file dung lượng lớn)</p>
+                    </div>
+
+                    <!-- Progress bar upload file -->
+                    <div id="upload-progress-container" class="hidden space-y-1.5 bg-slate-950/80 p-3 rounded-xl border border-slate-800">
+                        <div class="flex justify-between text-xs text-slate-300 font-medium">
+                            <span id="upload-filename" class="truncate max-w-[200px]">Đang tải lên...</span>
+                            <span id="upload-percent" class="text-accent-400 font-bold">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-800">
+                            <div id="upload-progress-bar" class="bg-gradient-to-r from-accent-500 to-brand-500 h-2 rounded-full transition-all duration-200" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cách B: Nhập đường dẫn trên server (Kaggle Dataset) -->
+                <div id="input-section-path" class="hidden space-y-3">
+                    <div class="flex space-x-2">
+                        <div class="relative flex-1">
+                            <i data-lucide="folder" class="w-4 h-4 text-slate-500 absolute left-3 top-2.5"></i>
+                            <input type="text" id="dataset-filepath-input" placeholder="/kaggle/input/.../video.mp4" class="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-700/80 rounded-xl text-xs focus:outline-none focus:border-accent-500 text-slate-200 placeholder:text-slate-600 font-mono">
+                        </div>
+                        <button type="button" onclick="probeVideoPath()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition active:scale-95 shrink-0">
+                            <i data-lucide="search" class="w-3.5 h-3.5"></i>
+                            <span>Kiểm tra</span>
+                        </button>
+                    </div>
+                    <p class="text-[11px] text-slate-500">Nhập đường dẫn tuyệt đối của video có sẵn trong Kaggle Datasets hoặc thư mục input.</p>
+                </div>
+
+                <!-- Video Metadata Badge Card -->
+                <div id="video-meta-card" class="mt-4 hidden p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3 overflow-hidden">
+                            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-accent-500/20 to-brand-500/20 border border-accent-500/30 flex items-center justify-center shrink-0">
+                                <i data-lucide="film" class="w-5 h-5 text-accent-400"></i>
+                            </div>
+                            <div class="truncate">
+                                <p id="meta-filename" class="font-bold text-slate-200 text-xs truncate">video.mp4</p>
+                                <p class="text-[11px] text-slate-400 font-mono" id="meta-filepath">/path/to/video.mp4</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-1">
+                            <button type="button" onclick="previewSourceVideo()" class="text-accent-400 hover:text-accent-300 p-1.5 rounded-lg hover:bg-slate-800 transition" title="Xem trước video này">
+                                <i data-lucide="play" class="w-4 h-4"></i>
+                            </button>
+                            <button type="button" onclick="clearSelectedVideo()" class="text-slate-500 hover:text-red-400 p-1.5 rounded-lg hover:bg-slate-800 transition" title="Xóa video đã chọn">
+                                <i data-lucide="x" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Metadata Chips Grid -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs pt-1">
+                        <div class="p-2 bg-slate-900 rounded-lg border border-slate-800/80">
+                            <span class="text-[10px] text-slate-500 block">Độ phân giải</span>
+                            <b id="meta-res" class="text-slate-200 font-mono text-xs">1920×1080</b>
+                        </div>
+                        <div class="p-2 bg-slate-900 rounded-lg border border-slate-800/80">
+                            <span class="text-[10px] text-slate-500 block">Tốc độ khung hình</span>
+                            <b id="meta-fps" class="text-accent-400 font-mono text-xs">30 FPS</b>
+                        </div>
+                        <div class="p-2 bg-slate-900 rounded-lg border border-slate-800/80">
+                            <span class="text-[10px] text-slate-500 block">Thời lượng</span>
+                            <b id="meta-dur" class="text-slate-200 font-mono text-xs">0s</b>
+                        </div>
+                        <div class="p-2 bg-slate-900 rounded-lg border border-slate-800/80">
+                            <span class="text-[10px] text-slate-500 block">Dung lượng</span>
+                            <b id="meta-size" class="text-brand-400 font-mono text-xs">0 MB</b>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Metrics Grid -->
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
-                <div class="p-3 bg-slate-950/70 border border-slate-800/80 rounded-xl">
-                    <span class="text-slate-500 block text-[10px] uppercase font-bold tracking-wider">Khung hình</span>
-                    <span id="stat-frames" class="font-bold text-slate-200 text-sm mt-0.5 block">0 / 0</span>
-                </div>
-                <div class="p-3 bg-slate-950/70 border border-slate-800/80 rounded-xl">
-                    <span class="text-slate-500 block text-[10px] uppercase font-bold tracking-wider">Tốc độ</span>
-                    <span id="stat-fps" class="font-bold text-accent-400 text-sm mt-0.5 block">0.0 FPS</span>
-                </div>
-                <div class="p-3 bg-slate-950/70 border border-slate-800/80 rounded-xl">
-                    <span class="text-slate-500 block text-[10px] uppercase font-bold tracking-wider">Đã chạy</span>
-                    <span id="stat-elapsed" class="font-bold text-slate-200 text-sm mt-0.5 block">00:00:00</span>
-                </div>
-                <div class="p-3 bg-slate-950/70 border border-slate-800/80 rounded-xl">
-                    <span class="text-slate-500 block text-[10px] uppercase font-bold tracking-wider">Còn lại (Ước tính)</span>
-                    <span id="stat-remaining" class="font-bold text-amber-400 text-sm mt-0.5 block">00:00:00</span>
-                </div>
-            </div>
-
-            <!-- Status Banner Message -->
-            <div id="status-banner" class="mt-4 p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-400 flex items-center space-x-2">
-                <i data-lucide="info" class="w-4 h-4 text-slate-500 shrink-0"></i>
-                <span id="status-banner-text">Sẵn sàng. Chọn video và bấm "BẮT ĐẦU XỬ LÝ".</span>
-            </div>
-        </div>
-
-        <!-- Card 5: Trình phát & Kết quả Video -->
-        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl shadow-black/20 backdrop-blur space-y-4">
-            <div class="flex items-center justify-between">
-                <h2 class="text-base font-semibold text-white flex items-center space-x-2">
-                    <i data-lucide="play-circle" class="w-4 h-4 text-brand-500"></i>
-                    <span>Xem trước & Video kết quả</span>
+            <!-- Card 2: Chọn Chế độ & Mô hình AI -->
+            <div class="glass-panel rounded-2xl p-5 shadow-xl shadow-black/20">
+                <h2 class="text-sm font-bold text-white flex items-center space-x-2 mb-4">
+                    <span class="w-6 h-6 rounded-lg bg-brand-500/20 text-brand-400 flex items-center justify-center text-xs font-black">2</span>
+                    <span>Chế độ & Mô hình AI</span>
                 </h2>
-                <!-- Download button -->
-                <a id="btn-download-video" href="#" download class="hidden px-3 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold items-center space-x-1.5 transition">
-                    <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                    <span>Tải video về</span>
-                </a>
-            </div>
 
-            <!-- HTML5 Video Player Container -->
-            <div class="relative bg-black rounded-xl overflow-hidden aspect-video border border-slate-800 flex items-center justify-center">
-                <video id="result-video-player" controls class="w-full h-full object-contain hidden"></video>
-                <div id="video-placeholder" class="text-center p-6 space-y-2 text-slate-600">
-                    <i data-lucide="film" class="w-12 h-12 mx-auto stroke-1"></i>
-                    <p class="text-xs">Video thành phẩm sẽ xuất hiện tại đây sau khi hoàn tất</p>
+                <!-- Task Mode Tabs -->
+                <div class="grid grid-cols-3 gap-2 p-1.5 bg-slate-950 rounded-xl mb-4 border border-slate-800 text-xs font-semibold">
+                    <button type="button" onclick="selectTaskMode('realesrgan')" id="mode-btn-realesrgan" class="py-2.5 rounded-lg bg-accent-600 text-white transition text-center flex flex-col items-center shadow-sm">
+                        <span>Real-ESRGAN</span>
+                        <span class="text-[9px] opacity-80 font-normal">Deep Learning (Nét cao)</span>
+                    </button>
+                    <button type="button" onclick="selectTaskMode('libplacebo')" id="mode-btn-libplacebo" class="py-2.5 rounded-lg text-slate-400 hover:text-white transition text-center flex flex-col items-center">
+                        <span>Anime4K</span>
+                        <span class="text-[9px] opacity-80 font-normal">Shader (Siêu tốc)</span>
+                    </button>
+                    <button type="button" onclick="selectTaskMode('rife')" id="mode-btn-rife" class="py-2.5 rounded-lg text-slate-400 hover:text-white transition text-center flex flex-col items-center">
+                        <span>RIFE</span>
+                        <span class="text-[9px] opacity-80 font-normal">Tăng Mượt FPS</span>
+                    </button>
+                </div>
+
+                <!-- Group A: Real-ESRGAN Settings -->
+                <div id="group-realesrgan" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
+                            <span>Mô hình Real-ESRGAN:</span>
+                            <span class="text-[10px] text-accent-400 font-normal">Chuyên Anime & Đời thực</span>
+                        </label>
+                        <select id="realesrgan-model" class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-accent-500">
+                            <option value="realesr-animevideov3">realesr-animevideov3 (Anime / Hoạt hình - Nhanh, mượt, đẹp)</option>
+                            <option value="realesrgan-plus-anime">realesrgan-plus-anime (Anime nét cực cao - Chỉ 4x)</option>
+                            <option value="realesrgan-plus">realesrgan-plus (Người thật / Cảnh quay đời thực - 4x)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs font-semibold text-slate-300 mb-1.5">
+                            <span>Hệ số phóng to (Scaling Factor):</span>
+                            <span id="scale-badge" class="text-accent-400 font-bold font-mono">4x</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button type="button" onclick="setScale(2)" class="scale-btn py-2 rounded-xl border border-slate-800 bg-slate-950 text-xs font-semibold text-slate-300 hover:border-slate-700 transition" data-scale="2">2x</button>
+                            <button type="button" onclick="setScale(3)" class="scale-btn py-2 rounded-xl border border-slate-800 bg-slate-950 text-xs font-semibold text-slate-300 hover:border-slate-700 transition" data-scale="3">3x</button>
+                            <button type="button" onclick="setScale(4)" class="scale-btn py-2 rounded-xl border border-accent-500/80 bg-accent-600/20 text-xs font-bold text-accent-400 transition" data-scale="4">4x (Khuyên dùng)</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Group B: Anime4K Settings -->
+                <div id="group-libplacebo" class="hidden space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1.5">Shader Anime4K GLSL:</label>
+                        <select id="anime4k-shader" class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-accent-500">
+                            <option value="anime4k-v4-a">anime4k-v4-a (Tối ưu cho Anime 1080p gốc)</option>
+                            <option value="anime4k-v4-b">anime4k-v4-b (Tối ưu cho Anime 720p gốc)</option>
+                            <option value="anime4k-v4-c">anime4k-v4-c (Tối ưu cho Anime 480p gốc)</option>
+                            <option value="anime4k-v4-a+a">anime4k-v4-a+a (Chất lượng cao Mode A)</option>
+                            <option value="anime4k-v4.1-gan">anime4k-v4.1-gan (Chất lượng tối đa, chạy chậm hơn)</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Rộng (px):</label>
+                            <input type="number" id="target-width" value="0" placeholder="0 = Tự động" class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-1.5 text-xs text-slate-200 font-mono">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Cao (px):</label>
+                            <input type="number" id="target-height" value="0" placeholder="0 = Tự động" class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-1.5 text-xs text-slate-200 font-mono">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Group C: RIFE Settings -->
+                <div id="group-rife" class="hidden space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1.5">Mô hình RIFE (Optical Flow):</label>
+                        <select id="rife-model" class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-accent-500">
+                            <option value="rife-v4.6">rife-v4.6 (Phiên bản mới & mượt mà nhất)</option>
+                            <option value="rife-anime">rife-anime (Chuyên dụng cho phim Anime)</option>
+                            <option value="rife-v4">rife-v4 (Bản ổn định tiêu chuẩn)</option>
+                            <option value="rife-UHD">rife-UHD (Độ phân giải siêu cao 4K UHD)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1.5">Hệ số nhân khung hình:</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button type="button" onclick="setRifeMul(2)" class="rife-mul-btn py-2 rounded-xl border border-accent-500 bg-accent-600/20 text-xs font-bold text-accent-400" data-mul="2">2x (30fps ➡️ 60fps)</button>
+                            <button type="button" onclick="setRifeMul(4)" class="rife-mul-btn py-2 rounded-xl border border-slate-800 bg-slate-950 text-xs font-semibold text-slate-300" data-mul="4">4x (30fps ➡️ 120fps)</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Comparison Summary Card -->
-            <div id="comparison-card" class="hidden p-3.5 rounded-xl bg-brand-950/20 border border-brand-900/40 text-xs text-slate-300">
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <span class="text-[10px] text-slate-500 uppercase font-bold">Trước (Nguồn)</span>
-                        <p class="font-semibold mt-0.5 text-slate-300" id="cmp-before">720p &bull; 15 MB</p>
+            <!-- Card 3: Cấu hình FFmpeg nén video (Nâng cao) -->
+            <div class="glass-panel rounded-2xl p-5 shadow-xl shadow-black/20">
+                <button type="button" onclick="toggleAccordion('encoder-options')" class="w-full flex items-center justify-between text-left group">
+                    <span class="text-sm font-bold text-white flex items-center space-x-2">
+                        <span class="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs font-black">3</span>
+                        <span>Cấu hình xuất file & FFmpeg (Nâng cao)</span>
+                    </span>
+                    <i data-lucide="chevron-down" id="accordion-icon-encoder-options" class="w-4 h-4 text-slate-400 group-hover:text-white transition-transform"></i>
+                </button>
+
+                <div id="encoder-options" class="hidden mt-4 pt-4 border-t border-slate-800/80 space-y-4">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Bộ mã hóa (Codec):</label>
+                            <select id="encoder-codec" class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-2.5 py-2 text-xs text-slate-200">
+                                <option value="libx264">libx264 (CPU H.264 - Nét cao nhất)</option>
+                                <option value="h264_nvenc">h264_nvenc (NVIDIA GPU Hardware - Siêu nhanh)</option>
+                                <option value="libx265">libx265 (HEVC - Dung lượng siêu nhẹ)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Tốc độ nén (Preset):</label>
+                            <select id="encoder-preset" class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-2.5 py-2 text-xs text-slate-200">
+                                <option value="slow">slow (Tối ưu chất lượng)</option>
+                                <option value="medium">medium (Cân bằng tiêu chuẩn)</option>
+                                <option value="fast">fast (Nhanh hơn)</option>
+                                <option value="ultrafast">ultrafast (Siêu tốc độ)</option>
+                            </select>
+                        </div>
                     </div>
+
                     <div>
-                        <span class="text-[10px] text-brand-400 uppercase font-bold">Sau khi Upscale</span>
-                        <p class="font-bold mt-0.5 text-brand-400" id="cmp-after">4K UHD &bull; 48 MB</p>
+                        <div class="flex justify-between text-xs text-slate-300 mb-1.5 font-medium">
+                            <span>Chỉ số chất lượng CRF:</span>
+                            <span id="crf-value-badge" class="text-accent-400 font-bold font-mono">18 (Rất nét)</span>
+                        </div>
+                        <input type="range" id="encoder-crf" min="14" max="28" step="1" value="18" oninput="updateCrfLabel(this.value)" class="w-full cursor-pointer">
+                        <div class="flex justify-between text-[10px] text-slate-500 font-mono mt-1">
+                            <span>14 (Lossless/Nặng)</span>
+                            <span>18 (Chuẩn đẹp)</span>
+                            <span>28 (Nhẹ/Nén sâu)</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Pixel Format:</label>
+                            <select id="encoder-pixfmt" class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-2.5 py-2 text-xs text-slate-200">
+                                <option value="yuv420p">yuv420p (Chuẩn tương thích web/mọi thiết bị)</option>
+                                <option value="auto">auto (Giữ nguyên định dạng gốc)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Bitrate (0 = dùng CRF):</label>
+                            <input type="number" id="encoder-bitrate" value="0" class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-2.5 py-2 text-xs text-slate-200 font-mono">
+                        </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Action Control Buttons -->
+            <div class="flex space-x-3 pt-1">
+                <button type="button" id="btn-start" onclick="startProcessing()" class="flex-1 py-4 px-6 rounded-2xl bg-gradient-to-r from-brand-600 via-accent-600 to-accent-500 hover:from-brand-500 hover:to-accent-400 text-white font-extrabold text-sm shadow-xl shadow-brand-500/20 flex items-center justify-center space-x-2.5 transition-all duration-200 active:scale-[0.98]">
+                    <i data-lucide="play" class="w-4 h-4 fill-white"></i>
+                    <span>BẮT ĐẦU XỬ LÝ (Ctrl+Enter)</span>
+                </button>
+                <button type="button" id="btn-abort" onclick="abortProcessing()" disabled class="py-4 px-6 rounded-2xl bg-slate-800 text-slate-500 font-bold text-sm flex items-center justify-center space-x-2 transition cursor-not-allowed shrink-0">
+                    <i data-lucide="square" class="w-4 h-4"></i>
+                    <span>Dừng</span>
+                </button>
+            </div>
+
         </div>
 
-        <!-- Card 6: Live Terminal Logs Viewer -->
-        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl shadow-black/20 backdrop-blur space-y-3">
-            <div class="flex items-center justify-between text-xs">
-                <span class="font-semibold text-slate-300 flex items-center space-x-2">
-                    <i data-lucide="terminal" class="w-4 h-4 text-slate-400"></i>
-                    <span>Terminal Logs (Thời gian thực)</span>
-                </span>
-                <div class="flex items-center space-x-2">
-                    <button type="button" onclick="clearLogs()" class="text-slate-400 hover:text-white px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 transition">Xóa log</button>
+        <!-- ========================================== -->
+        <!-- CỘT PHẢI: TIẾN TRÌNH & KẾT QUẢ (7 Columns) -->
+        <!-- ========================================== -->
+        <div class="lg:col-span-7 space-y-5">
+
+            <!-- Card 4: Tiến độ thời gian thực -->
+            <div class="glass-panel rounded-2xl p-5 shadow-xl shadow-black/20">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-sm font-bold text-white flex items-center space-x-2">
+                        <i data-lucide="gauge" class="w-4 h-4 text-accent-400"></i>
+                        <span>Tiến độ xử lý thời gian thực</span>
+                    </h2>
+                    <span id="progress-percent-badge" class="text-xs font-extrabold px-3 py-1 rounded-full bg-slate-950 border border-slate-800 text-slate-300 font-mono">0.0%</span>
+                </div>
+
+                <!-- Main Progress Bar -->
+                <div class="space-y-2 mb-4">
+                    <div class="w-full bg-slate-950 rounded-full h-4 p-0.5 border border-slate-800 overflow-hidden shadow-inner">
+                        <div id="main-progress-bar" class="h-full rounded-full bg-gradient-to-r from-accent-500 via-brand-500 to-accent-400 transition-all duration-300 progress-glow" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Metrics Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs font-mono">
+                    <div class="p-3 bg-slate-950/80 border border-slate-800 rounded-xl">
+                        <span class="text-slate-500 block text-[10px] font-sans font-bold uppercase tracking-wider">Khung hình</span>
+                        <span id="stat-frames" class="font-bold text-slate-200 text-sm mt-0.5 block">0 / 0</span>
+                    </div>
+                    <div class="p-3 bg-slate-950/80 border border-slate-800 rounded-xl">
+                        <span class="text-slate-500 block text-[10px] font-sans font-bold uppercase tracking-wider">Tốc độ</span>
+                        <span id="stat-fps" class="font-bold text-accent-400 text-sm mt-0.5 block">0.0 FPS</span>
+                    </div>
+                    <div class="p-3 bg-slate-950/80 border border-slate-800 rounded-xl">
+                        <span class="text-slate-500 block text-[10px] font-sans font-bold uppercase tracking-wider">Thời gian chạy</span>
+                        <span id="stat-elapsed" class="font-bold text-slate-200 text-sm mt-0.5 block">00:00:00</span>
+                    </div>
+                    <div class="p-3 bg-slate-950/80 border border-slate-800 rounded-xl">
+                        <span class="text-slate-500 block text-[10px] font-sans font-bold uppercase tracking-wider">Ước tính còn lại</span>
+                        <span id="stat-remaining" class="font-bold text-amber-400 text-sm mt-0.5 block">00:00:00</span>
+                    </div>
+                </div>
+
+                <!-- Status Banner Message -->
+                <div id="status-banner" class="mt-4 p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-400 flex items-center space-x-2.5">
+                    <i data-lucide="info" class="w-4 h-4 text-slate-500 shrink-0"></i>
+                    <span id="status-banner-text" class="truncate">Sẵn sàng. Chọn video và bấm "BẮT ĐẦU XỬ LÝ".</span>
                 </div>
             </div>
-            <div id="terminal-logs" class="bg-slate-950 border border-slate-800/90 rounded-xl p-3.5 font-mono text-[11px] leading-relaxed text-slate-400 h-44 overflow-y-auto space-y-0.5">
-                <p class="text-slate-600">[Hệ thống] Chờ khởi chạy tiến trình Video2X...</p>
+
+            <!-- Card 5: Trình phát Video & So sánh Kết quả -->
+            <div class="glass-panel rounded-2xl p-5 shadow-xl shadow-black/20 space-y-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <h2 class="text-sm font-bold text-white flex items-center space-x-2">
+                            <i data-lucide="play-circle" class="w-4 h-4 text-brand-400"></i>
+                            <span>Xem trước & Kết quả</span>
+                        </h2>
+                        <!-- Tabs switch between output & source -->
+                        <div id="player-tab-group" class="hidden flex bg-slate-950 p-0.5 rounded-lg text-[11px] font-semibold border border-slate-800">
+                            <button type="button" id="tab-player-output" onclick="switchPlayerTab('output')" class="px-2.5 py-1 rounded-md bg-brand-600 text-white transition">Video Đã Xử Lý</button>
+                            <button type="button" id="tab-player-input" onclick="switchPlayerTab('input')" class="px-2.5 py-1 rounded-md text-slate-400 hover:text-white transition">Video Gốc</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Download button -->
+                    <a id="btn-download-video" href="#" download class="hidden px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-accent-600 hover:from-brand-500 hover:to-accent-500 text-white text-xs font-bold items-center space-x-1.5 shadow-md shadow-brand-500/20 transition active:scale-95">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        <span>Tải video về</span>
+                    </a>
+                </div>
+
+                <!-- HTML5 Video Player Container -->
+                <div class="relative bg-black rounded-xl overflow-hidden aspect-video border border-slate-800/80 flex items-center justify-center shadow-inner">
+                    <video id="result-video-player" controls class="w-full h-full object-contain hidden"></video>
+                    <div id="video-placeholder" class="text-center p-6 space-y-2 text-slate-600">
+                        <div class="w-12 h-12 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center mx-auto text-slate-500">
+                            <i data-lucide="film" class="w-6 h-6"></i>
+                        </div>
+                        <p class="text-xs font-medium">Video sau khi xử lý sẽ xuất hiện tại đây</p>
+                        <p class="text-[11px] text-slate-700">Hỗ trợ phát trực tiếp & tải về ở định dạng chuẩn MP4</p>
+                    </div>
+                </div>
+
+                <!-- Comparison Summary Card -->
+                <div id="comparison-card" class="hidden p-4 rounded-xl bg-slate-950 border border-slate-800 text-xs">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="p-2.5 bg-slate-900/60 rounded-lg border border-slate-800/60">
+                            <span class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Video Gốc (Trước)</span>
+                            <p class="font-bold font-mono mt-1 text-slate-300 text-xs" id="cmp-before">720p &bull; 15 MB</p>
+                        </div>
+                        <div class="p-2.5 bg-emerald-950/30 rounded-lg border border-emerald-900/40">
+                            <span class="text-[10px] text-emerald-400 uppercase font-bold tracking-wider">Sau khi Upscale (Kết quả)</span>
+                            <p class="font-bold font-mono mt-1 text-emerald-300 text-xs" id="cmp-after">4K UHD &bull; 48 MB</p>
+                        </div>
+                    </div>
+                </div>
             </div>
+
+            <!-- Card 6: Live Terminal Logs Viewer -->
+            <div class="glass-panel rounded-2xl p-5 shadow-xl shadow-black/20 space-y-3">
+                <div class="flex items-center justify-between text-xs">
+                    <!-- Mac Window Dots -->
+                    <div class="flex items-center space-x-2">
+                        <div class="flex items-center space-x-1.5 mr-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-rose-500/80 inline-block"></span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500/80 inline-block"></span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block"></span>
+                        </div>
+                        <span class="font-bold text-slate-300 flex items-center space-x-1.5">
+                            <i data-lucide="terminal" class="w-3.5 h-3.5 text-slate-400"></i>
+                            <span>Nhật ký Terminal thời gian thực</span>
+                        </span>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <button type="button" id="btn-toggle-scroll" onclick="toggleAutoScroll()" class="text-slate-400 hover:text-white px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 transition text-[11px] flex items-center space-x-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400" id="scroll-dot"></span>
+                            <span>Tự cuộn: BẬT</span>
+                        </button>
+                        <button type="button" onclick="copyLogs()" class="text-slate-400 hover:text-white px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 transition text-[11px] flex items-center space-x-1" title="Sao chép nhật ký">
+                            <i data-lucide="copy" class="w-3 h-3"></i>
+                            <span id="copy-log-text">Sao chép</span>
+                        </button>
+                        <button type="button" onclick="clearLogs()" class="text-slate-400 hover:text-white px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 transition text-[11px]">Xóa log</button>
+                    </div>
+                </div>
+
+                <div id="terminal-logs" class="bg-slate-950 border border-slate-800 rounded-xl p-3.5 font-mono text-[11px] leading-relaxed text-slate-400 h-44 overflow-y-auto space-y-0.5">
+                    <p class="text-slate-600">[Hệ thống] Trạm xử lý video AI đã sẵn sàng. Chờ lệnh từ người dùng...</p>
+                </div>
+            </div>
+
         </div>
 
     </div>
@@ -356,14 +451,14 @@
 <!-- ========================================== -->
 <!-- MODAL: THÔNG TIN PHẦN CỨNG & GPU          -->
 <!-- ========================================== -->
-<div id="system-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+<div id="system-modal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4">
         <div class="flex items-center justify-between border-b border-slate-800 pb-3">
             <h3 class="text-base font-bold text-white flex items-center space-x-2">
                 <i data-lucide="cpu" class="w-5 h-5 text-accent-500"></i>
                 <span>Thông tin Phần cứng & GPU NVIDIA</span>
             </h3>
-            <button onclick="closeSystemModal()" class="text-slate-400 hover:text-white p-1">
+            <button onclick="closeSystemModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition">
                 <i data-lucide="x" class="w-5 h-5"></i>
             </button>
         </div>
@@ -375,15 +470,15 @@
                 </div>
                 <div class="p-3 bg-slate-950 rounded-xl border border-slate-800">
                     <span class="text-slate-500 block">Driver Version</span>
-                    <b id="modal-gpu-driver" class="text-slate-200 text-sm mt-0.5 block">N/A</b>
+                    <b id="modal-gpu-driver" class="text-slate-200 text-sm mt-0.5 block font-mono">N/A</b>
                 </div>
                 <div class="p-3 bg-slate-950 rounded-xl border border-slate-800">
                     <span class="text-slate-500 block">VRAM Đã dùng</span>
-                    <b id="modal-gpu-vram" class="text-accent-400 text-sm mt-0.5 block">0 / 0 MiB</b>
+                    <b id="modal-gpu-vram" class="text-accent-400 text-sm mt-0.5 block font-mono">0 / 0 MiB</b>
                 </div>
                 <div class="p-3 bg-slate-950 rounded-xl border border-slate-800">
                     <span class="text-slate-500 block">Nhiệt độ</span>
-                    <b id="modal-gpu-temp" class="text-amber-400 text-sm mt-0.5 block">N/A</b>
+                    <b id="modal-gpu-temp" class="text-amber-400 text-sm mt-0.5 block font-mono">N/A</b>
                 </div>
             </div>
             <div>
