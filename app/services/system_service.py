@@ -1,6 +1,8 @@
 import os
 import re
+import json
 import shutil
+import pathlib
 import subprocess
 from app.models.system import GPUInfo, SystemEnvInfo
 
@@ -9,45 +11,63 @@ class SystemService:
     """Service kiểm tra phần cứng GPU, Vulkan và môi trường hệ thống."""
 
     @staticmethod
+    def _ensure_vulkan_icd() -> str:
+        """Đảm bảo file nvidia_icd.json tồn tại nếu đang chạy trên Linux có card NVIDIA."""
+        icd_path = "/usr/share/vulkan/icd.d/nvidia_icd.json"
+        if os.path.exists(icd_path):
+            return icd_path
+
+        # Tự động tạo nvidia_icd.json nếu có quyền ghi
+        try:
+            icd_dir = pathlib.Path("/usr/share/vulkan/icd.d")
+            icd_dir.mkdir(parents=True, exist_ok=True)
+            with open(icd_path, "w") as f:
+                json.dump({
+                    "file_format_version": "1.0.0",
+                    "ICD": {
+                        "library_path": "libGLX_nvidia.so.0",
+                        "api_version": "1.3.0"
+                    }
+                }, f, indent=4)
+            return icd_path
+        except Exception:
+            return ""
+
+    @staticmethod
     def get_gpu_info() -> GPUInfo:
-        """Đọc và phân tích thông tin từ nvidia-smi."""
+        """Lấy thông số GPU NVIDIA từ nvidia-smi."""
         gpu = GPUInfo()
         try:
-            res = subprocess.run(["nvidia-smi"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=5)
-            if res.returncode == 0:
-                gpu.available = True
-                gpu.raw_output = res.stdout
+            res = subprocess.run(
+                ["nvidia-smi", "--query-gpu=name,driver_version,memory.total,memory.used,utilization.gpu,temperature.gpu,power.draw", "--format=csv,noheader,nounits"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                timeout=5
+            )
+            if res.returncode == 0 and res.stdout.strip():
+                parts = [p.strip() for p in res.stdout.strip().split(",")]
+                if len(parts) >= 7:
+                    gpu.available = True
+                    gpu.name = parts[0]
+                    gpu.driver_ver = parts[1]
+                    gpu.vram_total = f"{parts[2]} MB"
+                    gpu.vram_used = f"{parts[3]} MB"
+                    gpu.gpu_util = f"{parts[4]}%"
+                    gpu.temperature = f"{parts[5]} °C"
+                    gpu.power = f"{parts[6]} W"
 
-                m_driver = re.search(r"Driver Version:\s*([\d\.]+)", res.stdout)
-                m_cuda = re.search(r"CUDA Version:\s*([\d\.]+)", res.stdout)
-                if m_driver:
-                    gpu.driver_ver = m_driver.group(1)
-                if m_cuda:
-                    gpu.cuda_ver = m_cuda.group(1)
-
-                m_name = re.search(r"\|\s*\d+\s+([A-Za-z0-9\s]+?)\s+Off\s+\|", res.stdout)
-                if m_name:
-                    gpu.name = m_name.group(1).strip()
-
-                m_vram = re.search(r"(\d+)MiB\s*/\s*(\d+)MiB", res.stdout)
-                if m_vram:
-                    gpu.vram_used = f"{int(m_vram.group(1)):,} MiB"
-                    gpu.vram_total = f"{int(m_vram.group(2)):,} MiB"
-
-                m_util = re.search(r"(\d+)%\s+Default", res.stdout)
-                if m_util:
-                    gpu.gpu_util = f"{m_util.group(1)}%"
-
-                m_temp = re.search(r"(\d+)C\s+P", res.stdout)
-                if m_temp:
-                    gpu.temperature = f"{m_temp.group(1)}°C"
+            # Lưu lại raw output tóm tắt
+            raw_res = subprocess.run(["nvidia-smi"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=5)
+            if raw_res.returncode == 0:
+                gpu.raw_output = raw_res.stdout
         except Exception as e:
             gpu.raw_output = f"Lỗi truy vấn GPU: {e}"
 
         return gpu
 
-    @staticmethod
-    def get_env_info(base_path: str = "/kaggle/working") -> SystemEnvInfo:
+    @classmethod
+    def get_env_info(cls, base_path: str = "/kaggle/working") -> SystemEnvInfo:
         """Kiểm tra sự hiện diện của video2x, ffmpeg, vulkan và dung lượng đĩa."""
         env = SystemEnvInfo()
 
@@ -71,14 +91,36 @@ class SystemService:
             pass
 
         # Kiểm tra Vulkan
-        try:
-            res = subprocess.run(["vulkaninfo", "--summary"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=5)
-            if res.returncode == 0:
-                env.vulkan = True
-                m_dev = re.search(r"deviceName\s*=\s*(.+)", res.stdout)
-                env.vulkan_device = m_dev.group(1).strip() if m_dev else "Vulkan Device khả dụng"
-        except Exception:
-            pass
+        cls._ensure_vulkan_icd()
+        env_vars = os.environ.copy()
+        if os.path.exists("/usr/share/vulkan/icd.d/nvidia_icd.json"):
+            env_vars["VK_ICD_FILENAMES"] = "/usr/share/vulkan/icd.d/nvidia_icd.json"
+        env_vars.setdefault("__NV_PRIME_RENDER_OFFLOAD", "1")
+        env_vars.setdefault("__VK_LAYER_NV_optimus", "NVIDIA_only")
+
+        if shutil.which("vulkaninfo") is None:
+            env.vulkan = False
+            env.vulkan_device = "Chưa cài vulkan-tools"
+        else:
+            try:
+                res = subprocess.run(
+                    ["vulkaninfo", "--summary"],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    timeout=5,
+                    env=env_vars
+                )
+                if res.returncode == 0:
+                    env.vulkan = True
+                    m_dev = re.search(r"deviceName\s*=\s*(.+)", res.stdout)
+                    env.vulkan_device = m_dev.group(1).strip() if m_dev else "Vulkan Device khả dụng"
+                else:
+                    env.vulkan = False
+                    env.vulkan_device = "Thiếu driver Vulkan (libnvidia-gl)"
+            except Exception:
+                env.vulkan = False
+                env.vulkan_device = "Lỗi kiểm tra Vulkan"
 
         # Dung lượng ổ cứng
         check_dir = base_path if os.path.exists(base_path) else "."

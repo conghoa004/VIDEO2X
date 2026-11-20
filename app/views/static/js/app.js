@@ -25,8 +25,17 @@ async function fetchSystemEnvironment() {
         if (res.ok) {
             const data = await res.json();
             const vulkanText = document.getElementById("vulkan-text");
+            const badgeVulkan = document.getElementById("badge-vulkan");
             if (vulkanText) {
-                vulkanText.innerText = data.vulkan ? data.vulkan_device : "Vulkan Chưa sẵn sàng";
+                if (data.vulkan) {
+                    vulkanText.innerText = data.vulkan_device;
+                    vulkanText.classList.remove("text-slate-300", "text-rose-400", "text-amber-400");
+                    vulkanText.classList.add("text-emerald-400");
+                } else {
+                    vulkanText.innerText = data.vulkan_device ? `Vulkan: ${data.vulkan_device}` : "Vulkan Chưa sẵn sàng";
+                    vulkanText.classList.remove("text-slate-300", "text-emerald-400");
+                    vulkanText.classList.add("text-amber-400");
+                }
             }
         }
     } catch (e) {
