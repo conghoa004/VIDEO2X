@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Video2X AI Studio{% endblock %}</title>
+    
+    <!-- Official TailwindCSS CDN with Custom Config -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            850: '#151e2e',
+                            950: '#070d18'
+                        },
+                        brand: {
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857'
+                        },
+                        accent: {
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Official Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-accent-500 selection:text-white">
+
+    <!-- Top Navigation Bar -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-accent-600 to-brand-500 flex items-center justify-center shadow-lg shadow-accent-500/20">
+                    <i data-lucide="sparkles" class="w-5 h-5 text-white"></i>
+                </div>
+                <div>
+                    <span class="font-bold text-lg tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">Video2X AI Studio</span>
+                    <span class="ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-accent-500/10 text-accent-400 border border-accent-500/20">v6.2.0 C++</span>
+                </div>
+            </div>
+
+            <!-- Header System Badges -->
+            <div class="hidden md:flex items-center space-x-3 text-xs" id="nav-system-badges">
+                <div class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700/60" id="badge-gpu">
+                    <i data-lucide="cpu" class="w-3.5 h-3.5 text-brand-500"></i>
+                    <span class="text-slate-300" id="gpu-text">Đang kiểm tra GPU...</span>
+                </div>
+                <div class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700/60" id="badge-vulkan">
+                    <i data-lucide="zap" class="w-3.5 h-3.5 text-accent-500"></i>
+                    <span class="text-slate-300" id="vulkan-text">Vulkan API</span>
+                </div>
+                <button onclick="openSystemModal()" class="flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition border border-slate-700">
+                    <i data-lucide="activity" class="w-3.5 h-3.5 text-amber-400"></i>
+                    <span>Phần cứng</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-900 bg-slate-950 py-4 text-center text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <span>Video2X Powered by <b>K4YT3X</b> &bull; Real-ESRGAN &bull; Anime4K &bull; RIFE</span>
+            <span>FastAPI + TailwindCSS + Lucide MVC Architecture</span>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="/static/js/app.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

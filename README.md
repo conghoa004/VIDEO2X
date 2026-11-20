@@ -1,101 +1,122 @@
-# 🎬 Video2X Cloud Runner (Kaggle & Google Colab)
+# 🎬 Video2X AI Studio (FastAPI + TailwindCSS MVC Web UI)
 
-> **Nâng cấp độ phân giải video (AI Video Upscaling) và tăng mượt khung hình (Frame Interpolation) hoàn toàn miễn phí trên Cloud GPU (NVIDIA Tesla T4 / P100).**
+> **Giao diện Web AI chuyên nghiệp xây dựng theo kiến trúc MVC chuẩn mực (FastAPI, TailwindCSS CDN, Lucide Icons) hỗ trợ nâng cấp độ phân giải video (Super-Resolution) và làm mượt khung hình (Frame Interpolation) trên Cloud GPU (Kaggle / Colab) và máy trạm Local.**
 
-[![Kaggle](https://img.shields.io/badge/Kaggle-Notebook-20BEFF?logo=kaggle&logoColor=white)](https://www.kaggle.com/code)
-[![Google Colab](https://img.shields.io/badge/Google%20Colab-Ready-F9AB00?logo=googlecolab&logoColor=white)](https://colab.research.google.com/)
+[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![TailwindCSS](https://img.shields.io/badge/Frontend-TailwindCSS-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![Lucide Icons](https://img.shields.io/badge/Icons-Lucide%20Icons-F56565?logo=lucide&logoColor=white)](https://lucide.dev/)
+[![Kaggle](https://img.shields.io/badge/Kaggle-1--Click%20Ready-20BEFF?logo=kaggle&logoColor=white)](https://www.kaggle.com/code)
 [![Video2X](https://img.shields.io/badge/Video2X-v6.2.0-red?logo=github)](https://github.com/k4yt3x/video2x)
-[![GPU Accelerated](https://img.shields.io/badge/GPU-NVIDIA%20Vulkan-76B900?logo=nvidia&logoColor=white)](https://www.nvidia.com)
 [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
 
 ---
 
-## 💡 Tổng quan
+## 🏛️ Kiến trúc phần mềm chuẩn MVC (Model - View - Controller)
 
-Kho lưu trữ này cung cấp các notebook chạy **[Video2X v6.2.0](https://github.com/k4yt3x/video2x)** (phiên bản C++ native tối ưu hiệu năng) trên nền tảng đám mây **Kaggle** và **Google Colab**. Bạn không cần sở hữu card đồ họa rời ở máy tính cá nhân nhưng vẫn có thể nâng cấp video lên **2K / 4K** với chất lượng cao nhất.
+Toàn bộ ứng dụng web được tổ chức khoa học, phân tách rõ ràng giữa **Mô hình dữ liệu (Model)**, **Giao diện hiển thị (View)**, **Bộ điều hướng xử lý (Controller)** và **Dịch vụ nghiệp vụ (Service)**:
 
-### ⚖️ So sánh Kaggle vs Google Colab
-
-| Đặc điểm | Kaggle Notebooks (Khuyên dùng) | Google Colab (Bản Free) |
-| :--- | :--- | :--- |
-| **Phần cứng GPU** | **2x NVIDIA Tesla T4 (T4 x2)** hoặc P100 (15 - 16 GB VRAM) | 1x Tesla T4 (15 GB VRAM) |
-| **Hạn mức miễn phí** | **30 giờ GPU / tuần** (rất hào phóng) | Giới hạn theo hạn ngạch động hàng ngày |
-| **Độ ổn định phiên** | Chạy liên tục tới **12 tiếng**, ít bị disconnect đột ngột | Thường xuyên bị ngắt phiên nếu không tương tác |
-| **Lưu trữ kết quả** | Tải trực tiếp từ tab **Output** hoặc lưu thành Dataset | Lưu tự động vào **Google Drive** |
-
----
-
-## 📁 Các file trong dự án
-
-* **[`video2x-kaggle.ipynb`](./video2x-kaggle.ipynb)** *(Bản chính)*: Notebook tối ưu cho Kaggle, hỗ trợ nạp video qua Kaggle Dataset hoặc đường dẫn direct, đã xử lý toàn bộ lỗi Vulkan và FFmpeg 7.
-* **[`Video2X_Kaggle.ipynb`](./Video2X_Kaggle.ipynb)**: Bản Kaggle tích hợp thêm nút bấm chọn & tải file trực tiếp từ máy tính lên.
-* **[`Video2X_Colab.ipynb`](./Video2X_Colab.ipynb)**: Bản chính thức dành cho Google Colab, mount trực tiếp với Google Drive.
-
----
-
-## 🚀 Hướng dẫn nhanh trên Kaggle (3 phút)
-
-### Bước 1: Tải Notebook lên Kaggle
-1. Vào [kaggle.com/code](https://www.kaggle.com/code) ➡️ chọn **New Notebook**.
-2. Chọn menu **File** ➡️ **Upload notebook** ➡️ tải lên file **[`video2x-kaggle.ipynb`](./video2x-kaggle.ipynb)**.
-
-### Bước 2: Thiết lập cấu hình bắt buộc
-Tại bảng điều khiển **Notebook Settings** (cột bên phải):
-* **Accelerator:** Chọn **GPU T4 x2** (hoặc GPU P100).
-* **Internet:** Gạt sang **ON** (bắt buộc để tải Video2X và model).
-
-### Bước 3: Chạy từng bước
-1. **Bước 0 & 1:** Chạy cell kiểm tra GPU và cài đặt môi trường (mất khoảng ~1.5 phút).
-2. **Bước 2:** Nhập đường dẫn video nguồn vào `selected_input_file`:
-   * *Từ Kaggle Dataset (Khuyên dùng cho video lớn):* `/kaggle/input/<tên-dataset>/video.mp4`
-   * *Từ thư mục tải lên:* `/kaggle/working/input/video.mp4`
-3. **Bước 3:** Điều chỉnh tham số (Model, Scale 2x/4x, CRF) và bấm chạy Upscale.
-4. **Bước 4:** Vào tab **Output** (góc phải) ➡️ tải video đã hoàn thành về máy tính.
+```text
+D:\WORK_SPACE\VIDEO2X\
+├── app/
+│   ├── __init__.py
+│   ├── main.py                     # Entry point khởi tạo FastAPI app, cấu hình Jinja2 & Static
+│   ├── models/                     # [M] MODEL: Định nghĩa Pydantic schemas
+│   │   ├── __init__.py
+│   │   ├── video.py                # VideoMetadata, ProcessingOptions, TaskProgress, TaskResult
+│   │   └── system.py               # GPUInfo, SystemEnvInfo
+│   ├── controllers/                # [C] CONTROLLER: Xử lý Request & Router API
+│   │   ├── __init__.py
+│   │   ├── home_controller.py      # Render giao diện Single Page Application (GET /)
+│   │   ├── video_controller.py     # Upload, đọc thông số (ffprobe), stream video, tải về
+│   │   ├── task_controller.py      # Bắt đầu, hủy tiến trình, Server-Sent Events (SSE) stream
+│   │   └── system_controller.py    # Kiểm tra GPU (nvidia-smi), Vulkan, ổ cứng
+│   ├── services/                   # SERVICE: Xử lý nghiệp vụ & kết nối CLI
+│   │   ├── __init__.py
+│   │   ├── video2x_service.py      # Chạy tiến trình CLI, parse regex frame=X/Y, quản lý hủy
+│   │   ├── ffmpeg_service.py       # Trích xuất thông số (độ phân giải, fps, thời lượng)
+│   │   └── system_service.py       # Đọc thông số phần cứng NVIDIA, Vulkan ICD
+│   └── views/                      # [V] VIEW: Giao diện người dùng
+│       ├── templates/
+│       │   ├── base.html           # Layout chuẩn tích hợp TailwindCSS CDN & Lucide Icons CDN
+│       │   └── index.html          # Dashboard giao diện hiện đại (Dark slate theme)
+│       └── static/
+│           ├── css/
+│           │   └── style.css       # Hiệu ứng glow, thanh cuộn terminal, animation
+│           └── js/
+│               └── app.js          # Reactive controller (Kéo thả, SSE live logs/progress)
+├── run.py                          # CLI Runner & tự động cấu hình Cloudflare Tunnel (--share)
+├── requirements.txt                # FastAPI, Uvicorn, Jinja2, Aiofiles...
+├── .gitignore                      # Cấu hình bỏ qua file tạm, cache, video output, venv
+└── video2x-kaggle.ipynb            # Notebook phiên bản chạy lệnh truyền thống
+```
 
 ---
 
-## 🎯 Cấu hình gợi ý theo từng thể loại Video
+## 🎨 Điểm nổi bật về Công nghệ & Giao diện
 
-| Thể loại Video | Bộ xử lý (`PROCESSOR`) | Mô hình (`MODEL`) | Hệ số Scale | Mức CRF gợi ý | Ghi chú |
-| :--- | :--- | :--- | :---: | :---: | :--- |
-| **Anime / Phim hoạt hình 2D** | `realesrgan` | `realesr-animevideov3` | **2x / 4x** | `18 - 20` | ⚡ Tốc độ render nhanh nhất, chuyển động mượt, khử artifact tốt. |
-| **Clip Lo-fi / Hoạt họa nét mảnh** | `realesrgan` | `realesrgan-plus-anime` | **4x** | `16 - 18` | 🎨 Chi tiết viền nét cực cao, màu sắc sắc sảo (chạy lâu hơn v3). |
-| **Người thật / Cảnh quay đời thực** | `realesrgan` | `realesrgan-plus` | **4x** | `18 - 20` | 📷 Khử nhiễu ISO, tái tạo bề mặt da và chi tiết thực tế. |
-| **Anime tập dài (cần tốc độ cao)** | `libplacebo` | `anime4k-v4-a` | Tự động | `20` | 🚀 Dùng shader GLSL thời gian thực, thời gian render nhanh gấp nhiều lần. |
-
----
-
-## 🎛️ Ý nghĩa các tham số nén (FFmpeg)
-
-* **`CRF` (Chất lượng nén video)**:
-  * `16`: Chất lượng siêu nét (gần như lossless), bảo toàn tối đa viền hạt, file xuất ra khá nặng.
-  * `18 - 20`: **Mức tối ưu được khuyên dùng** (cân bằng hoàn hảo giữa độ nét và dung lượng file).
-  * `22 - 24`: Nén nhẹ, tiết kiệm dung lượng cho video thời lượng dài.
-* **`PRESET`**: Giữ `slow` để thuật toán H.264 tối ưu hóa nén khung hình tốt nhất.
-* **`PIXFMT`**: Luôn giữ `yuv420p` để đảm bảo tương thích mọi trình phát trên Windows, Mac, iOS, Android và trình duyệt.
+1. **⚡ Backend hiệu năng cao (FastAPI & Asyncio):**
+   * Sử dụng **Server-Sent Events (SSE)** tại `/api/tasks/stream` để truyền tiến độ khung hình (`frame=96/192`, `1.05 FPS`, thời gian còn lại) và streaming log theo thời gian thực mà không gây nghẽn luồng.
+   * Hỗ trợ phát video trực tiếp với Range Requests trên trình duyệt.
+2. **💎 Frontend hiện đại (TailwindCSS CDN & Lucide Icons chính thống):**
+   * Tích hợp CDN chính hãng từ [TailwindCSS](https://cdn.tailwindcss.com) và thư viện icon vector [Lucide Icons](https://lucide.dev) (`unpkg.com/lucide`).
+   * Giao diện Dark Glassmorphism lấy tone màu xanh thẫm Slate 950 sang trọng, thanh tiến trình hiển thị hiệu ứng `progress-glow`.
+3. **🧠 Hỗ trợ trọn vẹn các thuật toán của Video2X v6.2.0:**
+   * **Real-ESRGAN:** `realesr-animevideov3` (Anime 2x/3x/4x), `realesrgan-plus-anime` (Siêu nét 4x), `realesrgan-plus` (Người thật 4x).
+   * **Anime4K (libplacebo):** Shader GLSL siêu tốc (`anime4k-v4-a`, `anime4k-v4.1-gan`...).
+   * **RIFE (Frame Interpolation):** Nhân đôi hoặc nhân 4 FPS (30 FPS ➡️ 60 / 120 FPS).
+   * **Tùy chỉnh nén FFmpeg:** Codec `libx264` / `h264_nvenc`, thanh trượt `CRF` (14 - 28), `Preset`, `Pixel Format` (`yuv420p`).
 
 ---
 
-## 🛠️ Các lỗi đã được xử lý sẵn (Troubleshooting)
+## 🚀 Khởi chạy Web UI
 
-Notebook trong repo này đã được viết mã để **tự động vá các lỗi đặc thù của Kaggle**:
+### 1. Khởi chạy trên Cloud GPU (Kaggle / Google Colab) với Link công khai
+Chỉ cần chạy lệnh sau trên terminal hoặc cell notebook:
+```bash
+# Cài đặt thư viện
+pip install -r requirements.txt
 
-1. **Lỗi thiếu FFmpeg 7 (`libavcodec.so.61: No such file or directory` - Exit 127):**
-   * *Nguyên nhân:* Video2X v6.2.0 biên dịch dựa trên FFmpeg 7, trong khi Ubuntu 22.04 mặc định chỉ có FFmpeg 4.
-   * *Khắc phục:* Bước 1 tự động thêm PPA `ubuntuhandbook1/ffmpeg7` và cập nhật bản FFmpeg mới nhất.
-
-2. **Lỗi không nhận GPU (`Failed to create Vulkan instance` - Exit 255):**
-   * *Nguyên nhân:* Docker của Kaggle mặc định chỉ cấp quyền CUDA, thiếu các thư viện đồ họa user-space Vulkan của NVIDIA.
-   * *Khắc phục:* Bước 1 tự động dò phiên bản driver thực tế (`535`, `550`, `580`...) và cài đặt gói `libnvidia-gl` tương thích cùng file cấu hình `nvidia_icd.json`.
-
-3. **Hiện tượng `Exit code: 139 / Segmentation fault (core dumped)` lúc kết thúc:**
-   * *Bản chất:* Sau khi render xong 100% khung hình và file MP4 đã đóng hoàn tất, tiến trình gọi lệnh hủy Vulkan context lúc thoát (`exit(0)`) bị xung đột bộ nhớ trong môi trường container headless.
-   * *Xác nhận:* **Video xuất ra đã hoàn chỉnh 100%**, không bị ảnh hưởng. Bạn có thể mở tab Output để xem và tải về sử dụng ngay.
+# Khởi chạy server FastAPI kèm đường dẫn Public HTTPS qua Cloudflare Tunnel:
+python run.py --share --port 7860
+```
+Terminal sẽ in ra đường link HTTPS công khai dạng:
+```text
+=================================================================
+🚀 GIAO DIỆN WEB CÔNG KHAI ĐÃ SẴN SÀNG:
+👉 https://xxxx.trycloudflare.com
+=================================================================
+```
+Bạn chỉ cần nhấp vào link để mở Web UI trên bất kỳ trình duyệt máy tính hoặc điện thoại nào!
 
 ---
 
-## 📜 Giấy phép & Nguồn tham khảo
+### 2. Khởi chạy Cục bộ (Local Machine)
+Nếu máy tính của bạn có card NVIDIA:
+```bash
+# 1. Cài đặt các thư viện phụ thuộc
+pip install -r requirements.txt
 
-* [Video2X](https://github.com/k4yt3x/video2x) bởi [K4YT3X](https://github.com/k4yt3x) (ISC License).
-* [Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN) bởi [Xintao Wang](https://github.com/xinntao).
-* [Anime4K](https://github.com/bloc97/Anime4K) bởi [bloc97](https://github.com/bloc97).
+# 2. Khởi chạy Web UI tại http://localhost:7860
+python run.py
+
+# (Tùy chọn) Mở link công khai qua Internet:
+python run.py --share
+```
+
+# 2. Khởi chạy server FastAPI
+python run.py --port 7860
+
+# 3. Mở public tunnel ra ngoài internet (tùy chọn)
+python run.py --port 7860 --share
+```
+
+Truy cập trên trình duyệt: `http://127.0.0.1:7860`.
+
+---
+
+## 📜 Bản quyền & Tham khảo
+
+* **Video2X:** Bản quyền thuộc về [K4YT3X](https://github.com/k4yt3x) (ISC License).
+* **FastAPI:** Bản quyền thuộc về [Sebastián Ramírez (tiangolo)](https://github.com/tiangolo/fastapi).
+* **TailwindCSS:** [Tailwind Labs](https://tailwindcss.com/).
+* **Lucide Icons:** [Lucide Project](https://lucide.dev/).

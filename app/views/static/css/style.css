@@ -1,0 +1,35 @@
+/* Custom Animations & Glow Effects for Video2X Web UI */
+
+@keyframes progress-pulse {
+    0%, 100% {
+        opacity: 1;
+        filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.4));
+    }
+    50% {
+        opacity: 0.85;
+        filter: drop-shadow(0 0 12px rgba(14, 165, 233, 0.6));
+    }
+}
+
+.progress-glow {
+    animation: progress-pulse 2s infinite ease-in-out;
+}
+
+/* Custom scrollbars for logs */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #020617;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #1e293b;
+    border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #334155;
+}
