@@ -1,4 +1,5 @@
 import os
+import mimetypes
 import aiofiles
 import pathlib
 from typing import Optional
@@ -55,32 +56,47 @@ async def probe_video_path(req: ProbeRequest):
 
 
 @router.get("/stream/{filename}")
-async def stream_video(filename: str, type: str = Query(default="output", pattern="^(input|output)$")):
+async def stream_video(
+    filename: str, 
+    type: str = Query(default="output", pattern="^(input|output)$"),
+    path: Optional[str] = Query(default=None, description="Đường dẫn tuyệt đối tùy chọn đến file video")
+):
     """Phát video trực tiếp với hỗ trợ xem trước trên trình duyệt."""
-    target_dir = OUTPUT_DIR if type == "output" else INPUT_DIR
-    target_path = target_dir / filename
+    if path and pathlib.Path(path).is_file():
+        target_path = pathlib.Path(path)
+    else:
+        target_dir = OUTPUT_DIR if type == "output" else INPUT_DIR
+        target_path = target_dir / filename
 
     if not target_path.exists() or not target_path.is_file():
         raise HTTPException(status_code=404, detail="Video không tồn tại.")
 
+    mime_type, _ = mimetypes.guess_type(str(target_path))
     return FileResponse(
         path=str(target_path),
-        media_type="video/mp4",
-        filename=filename
+        media_type=mime_type or "video/mp4",
+        filename=target_path.name
     )
 
 
 @router.get("/download/{filename}")
-async def download_video(filename: str, type: str = Query(default="output", pattern="^(input|output)$")):
+async def download_video(
+    filename: str, 
+    type: str = Query(default="output", pattern="^(input|output)$"),
+    path: Optional[str] = Query(default=None)
+):
     """Tải file video về máy tính cá nhân dưới dạng attachment."""
-    target_dir = OUTPUT_DIR if type == "output" else INPUT_DIR
-    target_path = target_dir / filename
+    if path and pathlib.Path(path).is_file():
+        target_path = pathlib.Path(path)
+    else:
+        target_dir = OUTPUT_DIR if type == "output" else INPUT_DIR
+        target_path = target_dir / filename
 
     if not target_path.exists():
         raise HTTPException(status_code=404, detail="File không tồn tại.")
 
     return FileResponse(
         path=str(target_path),
-        filename=filename,
+        filename=target_path.name,
         media_type="application/octet-stream"
     )

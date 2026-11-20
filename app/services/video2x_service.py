@@ -70,10 +70,15 @@ class Video2XService:
             cmd.extend(["--pix-fmt", opt.pixfmt])
 
         if opt.task_mode == "realesrgan":
+            # realesrgan-plus và realesrgan-plus-anime chỉ hỗ trợ tỷ lệ scale 4x
+            scale = opt.scale_factor
+            if opt.realesrgan_model in ("realesrgan-plus", "realesrgan-plus-anime") and scale != 4:
+                scale = 4
+
             cmd.extend([
                 "--processor", "realesrgan",
                 "--realesrgan-model", opt.realesrgan_model,
-                "--scaling-factor", str(opt.scale_factor)
+                "--scaling-factor", str(scale)
             ])
         elif opt.task_mode == "libplacebo":
             cmd.extend([
@@ -157,12 +162,16 @@ class Video2XService:
         progress_regex = re.compile(
             r"frame=(\d+)/(\d+)\s*\(([\d\.]+)%\);\s*fps=([\d\.]+);\s*elapsed=([^;]+);\s*remaining=([^\r\n]+)"
         )
+        ansi_regex = re.compile(r'\x1b\[[0-9;]*[a-zA-Z]')
 
         loop = asyncio.get_running_loop()
         last_progress_yield = 0
 
         while True:
             if self.is_aborted:
+                self.is_running = False
+                self.latest_progress.is_running = False
+                self.latest_progress.status_text = "Tiến trình đã bị người dùng hủy."
                 yield {"event": "error", "data": {"message": "Tiến trình đã bị người dùng hủy."}}
                 break
 
@@ -171,15 +180,18 @@ class Video2XService:
                 break
 
             if line:
-                line_str = line.strip()
+                line_str = ansi_regex.sub('', line).strip()
+                if not line_str:
+                    continue
+
                 m = progress_regex.search(line_str)
                 if m:
                     current_frame = int(m.group(1))
                     total_frames = int(m.group(2))
                     percent = float(m.group(3))
                     fps_val = float(m.group(4))
-                    elapsed = m.group(5)
-                    remaining = m.group(6)
+                    elapsed = m.group(5).strip()
+                    remaining = m.group(6).strip()
 
                     self.latest_progress = TaskProgress(
                         is_running=True,
@@ -203,12 +215,19 @@ class Video2XService:
 
         exit_code = self.current_process.poll()
         self.is_running = False
+        self.latest_progress.is_running = False
         duration = round(time.time() - start_time, 2)
+
+        # Nếu bị abort, không báo hoàn thành
+        if self.is_aborted:
+            return
 
         # Kiểm tra file đầu ra thành công
         is_success = output_file.exists() and output_file.stat().st_size > 10240
 
         if is_success:
+            self.latest_progress.percent = 100.0
+            self.latest_progress.status_text = f"Xử lý hoàn tất trong {duration}s!"
             out_meta = FFmpegService.get_metadata(str(output_file))
             result = TaskResult(
                 success=True,
@@ -223,7 +242,8 @@ class Video2XService:
             self.latest_result = result
             yield {"event": "complete", "data": result.model_dump()}
         else:
-            fail_msg = f"Tiến trình kết thúc với mã lỗi: {exit_code}"
+            fail_msg = f"Tiến trình kết thúc không thành công (mã lỗi: {exit_code})"
+            self.latest_progress.status_text = fail_msg
             yield {"event": "error", "data": {"message": fail_msg, "exit_code": exit_code}}
 
 

@@ -6,6 +6,7 @@ Hỗ trợ chạy cục bộ hoặc tạo Cloudflare Tunnel công khai khi chạ
 """
 
 import os
+import re
 import sys
 import time
 import shutil
@@ -51,16 +52,13 @@ def setup_cloudflare_tunnel(port: int) -> subprocess.Popen:
         # Lọc tìm URL public
         tunnel_url = None
         start = time.time()
-        while time.time() - start < 15:
+        while time.time() - start < 25:
             line = proc.stdout.readline()
             if line:
-                if "trycloudflare.com" in line:
-                    for part in line.split():
-                        if "trycloudflare.com" in part and part.startswith("http"):
-                            tunnel_url = part.strip()
-                            break
-                    if tunnel_url:
-                        break
+                m = re.search(r"https://[a-zA-Z0-9-]+\.trycloudflare\.com", line)
+                if m:
+                    tunnel_url = m.group(0)
+                    break
 
         if tunnel_url:
             print("\n" + "=" * 65)

@@ -46,7 +46,9 @@ class SystemService:
                 timeout=5
             )
             if res.returncode == 0 and res.stdout.strip():
-                parts = [p.strip() for p in res.stdout.strip().split(",")]
+                # Xử lý trường hợp đa GPU (Kaggle T4 x2) bằng cách lấy dòng GPU đầu tiên
+                first_line = res.stdout.strip().splitlines()[0]
+                parts = [p.strip() for p in first_line.split(",")]
                 if len(parts) >= 7:
                     gpu.available = True
                     gpu.name = parts[0]

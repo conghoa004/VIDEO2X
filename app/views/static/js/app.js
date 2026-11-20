@@ -23,7 +23,30 @@ document.addEventListener("DOMContentLoaded", () => {
     connectSSE();
     setupDropzone();
     setupKeyboardShortcuts();
+    setupModelWatchers();
 });
+
+function setupModelWatchers() {
+    const modelSelect = document.getElementById("realesrgan-model");
+    if (modelSelect) {
+        modelSelect.addEventListener("change", (e) => {
+            if (e.target.value !== "realesr-animevideov3") {
+                setScale(4);
+                document.querySelectorAll(".scale-btn").forEach((b) => {
+                    if (b.dataset.scale !== "4") {
+                        b.disabled = true;
+                        b.classList.add("opacity-40", "cursor-not-allowed");
+                    }
+                });
+            } else {
+                document.querySelectorAll(".scale-btn").forEach((b) => {
+                    b.disabled = false;
+                    b.classList.remove("opacity-40", "cursor-not-allowed");
+                });
+            }
+        });
+    }
+}
 
 async function fetchSystemEnvironment() {
     try {
@@ -294,12 +317,12 @@ function previewSourceVideo() {
     if (!selectedFilePath) return;
     const player = document.getElementById("result-video-player");
     const placeholder = document.getElementById("video-placeholder");
-    const streamUrl = `/api/video/stream/${encodeURIComponent(selectedFileName)}?type=input`;
+    const streamUrl = `/api/video/stream/${encodeURIComponent(selectedFileName)}?type=input&path=${encodeURIComponent(selectedFilePath)}`;
 
     player.src = streamUrl;
     player.classList.remove("hidden");
     placeholder.classList.add("hidden");
-    player.play();
+    player.play().catch(() => {});
 }
 
 // ==========================================
@@ -589,10 +612,11 @@ function switchPlayerTab(tab) {
         tabOutput.className = "px-2.5 py-1 rounded-md bg-brand-600 text-white transition";
         tabInput.className = "px-2.5 py-1 rounded-md text-slate-400 hover:text-white transition";
         player.src = `/api/video/stream/${encodeURIComponent(outputFileName)}?type=output`;
-    } else if (tab === "input" && selectedFileName) {
+    } else if (tab === "input" && (selectedFileName || selectedFilePath)) {
         tabInput.className = "px-2.5 py-1 rounded-md bg-accent-600 text-white transition";
         tabOutput.className = "px-2.5 py-1 rounded-md text-slate-400 hover:text-white transition";
-        player.src = `/api/video/stream/${encodeURIComponent(selectedFileName)}?type=input`;
+        const pathParam = selectedFilePath ? `&path=${encodeURIComponent(selectedFilePath)}` : '';
+        player.src = `/api/video/stream/${encodeURIComponent(selectedFileName)}?type=input${pathParam}`;
     }
 
     player.classList.remove("hidden");
