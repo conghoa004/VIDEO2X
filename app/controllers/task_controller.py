@@ -32,8 +32,12 @@ async def start_task(opt: ProcessingOptions, background_tasks: BackgroundTasks):
         raise HTTPException(status_code=400, detail="Hiện đang có một tác vụ đang chạy. Hãy dừng nó trước khi chạy mới.")
 
     async def run_in_background():
-        async for sse_item in video2x_service.run_task(opt):
-            await broadcast_event(sse_item["event"], sse_item["data"])
+        try:
+            async for sse_item in video2x_service.run_task(opt):
+                await broadcast_event(sse_item["event"], sse_item["data"])
+        except Exception as e:
+            video2x_service.is_running = False
+            await broadcast_event("error", {"message": f"Lỗi không mong muốn: {e}"})
 
     background_tasks.add_task(run_in_background)
     return {"status": "started", "message": "Đã khởi động tiến trình xử lý video!"}

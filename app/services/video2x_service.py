@@ -54,8 +54,8 @@ class Video2XService:
         """Tạo danh sách đối số dòng lệnh cho video2x."""
         cmd = [
             "video2x",
-            "--input", f'"{opt.input_file}"',
-            "--output", f'"{output_file}"',
+            "--input", str(opt.input_file),
+            "--output", str(output_file),
             "--codec", opt.codec,
             "--log-level", "info",
             "-e", f"preset={opt.preset}",
@@ -77,7 +77,7 @@ class Video2XService:
         elif opt.task_mode == "libplacebo":
             cmd.extend([
                 "--processor", "libplacebo",
-                "--libplacebo-shader", f'"{opt.shader_name}"'
+                "--libplacebo-shader", opt.shader_name
             ])
             if opt.target_width > 0:
                 cmd.extend(["--width", str(opt.target_width)])
@@ -117,7 +117,8 @@ class Video2XService:
         output_file = self.output_dir / out_filename
 
         cmd = self.build_command(opt, output_file)
-        cmd_str = " ".join(cmd)
+        import shlex
+        cmd_str = " ".join(shlex.quote(c) for c in cmd)
 
         start_log = f"🚀 Khởi chạy: {cmd_str}\n" + "-" * 60
         self.log_history.append(start_log)
@@ -132,14 +133,19 @@ class Video2XService:
         start_time = time.time()
         try:
             self.current_process = subprocess.Popen(
-                cmd_str,
-                shell=True,
+                cmd,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
                 bufsize=1,
                 env=env
             )
+        except FileNotFoundError:
+            self.is_running = False
+            err_msg = "Không tìm thấy lệnh 'video2x'. Hãy đảm bảo Video2X đã được cài đặt."
+            self.log_history.append(err_msg)
+            yield {"event": "error", "data": {"message": err_msg}}
+            return
         except Exception as e:
             self.is_running = False
             err_msg = f"Lỗi khởi chạy tiến trình: {e}"
