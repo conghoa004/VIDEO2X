@@ -76,7 +76,25 @@ def setup_cloudflare_tunnel(port: int) -> subprocess.Popen:
         return None
 
 
+def configure_vulkan_environment():
+    """Tự động phát hiện và thiết lập biến môi trường Vulkan ICD cho NVIDIA trên Linux/Kaggle."""
+    if os.name != "nt":
+        icd_path = "/usr/share/vulkan/icd.d/nvidia_icd.json"
+        if not os.path.exists(icd_path):
+            try:
+                os.makedirs("/usr/share/vulkan/icd.d", exist_ok=True)
+                with open(icd_path, "w") as f:
+                    f.write('{\n    "file_format_version": "1.0.0",\n    "ICD": {\n        "library_path": "libGLX_nvidia.so.0",\n        "api_version": "1.3.0"\n    }\n}\n')
+            except Exception:
+                pass
+        if os.path.exists(icd_path):
+            os.environ["VK_ICD_FILENAMES"] = icd_path
+        os.environ.setdefault("__NV_PRIME_RENDER_OFFLOAD", "1")
+        os.environ.setdefault("__VK_LAYER_NV_optimus", "NVIDIA_only")
+
+
 def main():
+    configure_vulkan_environment()
     parser = argparse.ArgumentParser(description="Khởi chạy Video2X FastAPI Web UI")
     parser.add_argument("--host", type=str, default="0.0.0.0", help="Địa chỉ host lắng nghe (mặc định: 0.0.0.0)")
     parser.add_argument("--port", type=int, default=7860, help="Cổng máy chủ (mặc định: 7860)")

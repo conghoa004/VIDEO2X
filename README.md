@@ -113,64 +113,112 @@ Open your web browser and navigate to: **`http://localhost:7860`**.
 
 ---
 
-### 2. Cloud GPU Environments (Kaggle / Google Colab)
+### 2. Cloud GPU Deployment (Kaggle & Google Colab)
 
-To run the Web UI on a Kaggle notebook or Colab GPU instance:
+Run the full Video2X Web Studio on free cloud GPUs (**NVIDIA Tesla T4 x2** or **P100**) with public HTTPS access.
 
-#### Step 1: Install System Dependencies (FFmpeg 7, Vulkan & Video2X)
-Execute the following commands in a code cell or bash terminal:
-```bash
-# 1. Install FFmpeg 7 and Vulkan tools
-apt-get update -yqq
-apt-get install -yqq software-properties-common
-add-apt-repository -y ppa:ubuntuhandbook1/ffmpeg7
-apt-get update -yqq
-apt-get install -yqq --no-install-recommends libvulkan1 libvulkan-dev vulkan-tools ffmpeg mesa-vulkan-drivers
+#### ⚙️ Mandatory Kaggle Notebook Settings:
+Before running, configure your Kaggle Notebook via the **Settings** panel on the right:
+1. **Accelerator:** Select **GPU T4 x2** (or **GPU P100**).
+2. **Internet:** Toggle to **ON** (required to download packages, models, and Cloudflare Tunnel).
 
-# 2. Install NVIDIA Vulkan driver matching your system driver version
-DRIVER_VER=$(nvidia-smi --query-gpu=driver_version --format=csv,noheader | cut -d. -f1)
-apt-get install -yqq --no-install-recommends libnvidia-gl-${DRIVER_VER} || apt-get install -yqq --no-install-recommends libnvidia-gl-535
+---
 
-# 3. Configure Vulkan ICD for NVIDIA
-mkdir -p /usr/share/vulkan/icd.d
-cat << 'EOF' > /usr/share/vulkan/icd.d/nvidia_icd.json
-{
-    "file_format_version": "1.0.0",
-    "ICD": {
-        "library_path": "libGLX_nvidia.so.0",
-        "api_version": "1.3.0"
-    }
-}
-EOF
-export VK_ICD_FILENAMES="/usr/share/vulkan/icd.d/nvidia_icd.json"
-export __NV_PRIME_RENDER_OFFLOAD=1
-export __VK_LAYER_NV_optimus=NVIDIA_only
-ldconfig
+#### 📦 Cell 1: Install Video2X, FFmpeg 7 & NVIDIA Vulkan Driver (~1.5 min)
+Create a new code cell and run this script to install all system packages, configure Vulkan ICD for NVIDIA GPU, and verify the setup:
 
-# 4. Install Video2X v6.2.0 .deb package
-wget -q -O /tmp/video2x.deb https://github.com/k4yt3x/video2x/releases/download/6.2.0/video2x-linux-ubuntu2204-amd64.deb
-apt-get install -yqq /tmp/video2x.deb || (dpkg -i /tmp/video2x.deb && apt-get install -fyqq)
+```python
+import os
+import re
+import json
+import subprocess
+from pathlib import Path
+
+print("⏳ [1/4] Installing FFmpeg 7 and Vulkan development packages...")
+!apt-get update -yqq
+!apt-get install -yqq software-properties-common
+!add-apt-repository -y ppa:ubuntuhandbook1/ffmpeg7
+!apt-get update -yqq
+!apt-get install -yqq --no-install-recommends libvulkan1 libvulkan-dev vulkan-tools ffmpeg mesa-vulkan-drivers
+
+print("\n⏳ [2/4] Detecting & installing NVIDIA Vulkan graphics driver (libnvidia-gl)...")
+driver_ver = '535'
+try:
+    smi_out = subprocess.check_output('nvidia-smi', shell=True).decode()
+    m = re.search(r'Driver Version:\s*(\d+)', smi_out)
+    if m:
+        driver_ver = m.group(1)
+        print(f"🔍 Detected Driver Version: {driver_ver}")
+except Exception:
+    pass
+
+!apt-get install -yqq --no-install-recommends libnvidia-gl-{driver_ver} || !apt-get install -yqq --no-install-recommends libnvidia-gl-535
+
+print("\n⏳ [3/4] Configuring Vulkan ICD for NVIDIA GPU...")
+icd_dir = Path("/usr/share/vulkan/icd.d")
+icd_dir.mkdir(parents=True, exist_ok=True)
+with open(icd_dir / "nvidia_icd.json", "w") as f:
+    json.dump({
+        "file_format_version": "1.0.0",
+        "ICD": {
+            "library_path": "libGLX_nvidia.so.0",
+            "api_version": "1.3.0"
+        }
+    }, f, indent=4)
+
+!cp -f /usr/share/vulkan/icd.d/nvidia_icd.json /etc/vulkan/icd.d/ 2>/dev/null || true
+os.environ["VK_ICD_FILENAMES"] = "/usr/share/vulkan/icd.d/nvidia_icd.json"
+os.environ["__NV_PRIME_RENDER_OFFLOAD"] = "1"
+os.environ["__VK_LAYER_NV_optimus"] = "NVIDIA_only"
+!ldconfig
+
+print("\n⏳ [4/4] Installing Video2X v6.2.0...")
+deb_file = "/tmp/video2x.deb"
+!wget -q -O {deb_file} https://github.com/k4yt3x/video2x/releases/download/6.2.0/video2x-linux-ubuntu2204-amd64.deb
+!apt-get install -yqq {deb_file} || (dpkg -i {deb_file} && apt-get install -fyqq)
+
+print("\n🔍 Validating Vulkan & Video2X:")
+!vulkaninfo --summary 2>/dev/null | grep -E "deviceName|driverName" || true
+!video2x --version
+print("\n✅ Setup completed successfully! NVIDIA GPU is ready for Vulkan.")
 ```
 
-#### Step 2: Install Python Packages & Launch with Public Tunnel
-```bash
-# Clone & install requirements
-git clone https://github.com/conghoa004/VIDEO2X.git
-cd VIDEO2X
-pip install -r requirements.txt
+---
 
-# Launch FastAPI Web Studio with public Cloudflare Tunnel
-python run.py --share --port 7860
+#### 🚀 Cell 2: Clone Repo, Install Python Dependencies & Launch Web Studio
+In the next code cell, clone the repository, install Python packages, and launch the server. It will automatically initialize Cloudflare Tunnel and display your public HTTPS link:
+
+```python
+%cd /kaggle/working
+!rm -rf VIDEO2X
+!git clone https://github.com/conghoa004/VIDEO2X.git
+%cd /kaggle/working/VIDEO2X
+!pip install -q -r requirements.txt
+
+# Launch FastAPI Web Studio (automatically launches Cloudflare Tunnel on Kaggle)
+!python run.py --port 7860
 ```
 
-The terminal will output your public URL:
+---
+
+#### 🌐 Step 3: Access the Web UI
+Once Cell 2 starts, look for the public URL in the cell output:
+
 ```text
 =================================================================
-🚀 PUBLIC WEB UI AVAILABLE AT:
+🚀 GIAO DIỆN WEB CÔNG KHAI ĐÃ SẴN SÀNG:
 👉 https://xxxx.trycloudflare.com
 =================================================================
 ```
-Click the link to open the full Video2X Web Studio on your desktop or mobile browser.
+
+Click the **`https://xxxx.trycloudflare.com`** link to open Video2X Web Studio in your browser on desktop or mobile. The Vulkan indicator badge in the header will display **`⚡ Tesla T4 (NVIDIA)`**, confirming hardware acceleration is active!
+
+---
+
+#### 💡 Kaggle Usage Tips:
+* **Direct Kaggle Dataset Inputs:** You can process videos directly from Kaggle Datasets by clicking **+ Add Input** (top right) and pasting the file path (e.g. `/kaggle/input/<dataset-name>/<video>.mp4`) into the **Đường dẫn trên máy chủ** field in the Web UI.
+* **Outputs:** Upscaled videos are stored in `/kaggle/working/output/`. You can download them directly via the Web UI's **Tải video kết quả** button or from the Kaggle **Output** sidebar.
+* **Exit code 139 (SIGSEGV) note:** When a video reaches 100%, Video2X may exit with code 139 due to Vulkan destructor cleanup in headless containers. The Web UI automatically recognizes this and marks the video as successful since the output file has already been completely written.
 
 ---
 
