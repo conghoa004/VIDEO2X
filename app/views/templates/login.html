@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập · Video2X AI Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-5">
+    <main class="w-full max-w-md">
+        <section class="rounded-3xl border border-slate-800 bg-slate-900/90 p-8 shadow-2xl shadow-black/30">
+            <div class="mb-7 flex items-center gap-3">
+                <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-sky-600 via-emerald-500 to-sky-400 shadow-lg shadow-sky-500/20">
+                    <i data-lucide="sparkles" class="h-6 w-6 text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-extrabold tracking-tight">Video2X AI Studio</h1>
+                    <p class="text-sm text-slate-400">Đăng nhập để tiếp tục</p>
+                </div>
+            </div>
+
+            <div class="mb-6 rounded-2xl border border-slate-800 bg-slate-950/80 p-4 text-sm leading-6 text-slate-300">
+                <div class="mb-1 flex items-center gap-2 font-semibold text-sky-300">
+                    <i data-lucide="key-round" class="h-4 w-4"></i>
+                    <span>Mật khẩu khởi chạy</span>
+                </div>
+                Mật khẩu được tạo mới mỗi lần mở app và hiển thị trong terminal.
+            </div>
+
+            {% if error %}
+            <div role="alert" class="mb-4 rounded-xl border border-red-900/70 bg-red-950/50 px-4 py-3 text-sm text-red-300">
+                {{ error }}
+            </div>
+            {% endif %}
+
+            <form method="post" action="/login" class="space-y-4">
+                <input type="hidden" name="next" value="{{ next }}">
+                <label for="password" class="block text-sm font-medium text-slate-300">Mật khẩu</label>
+                <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    autocomplete="current-password"
+                    required
+                    autofocus
+                    class="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition placeholder:text-slate-600 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
+                    placeholder="Nhập mật khẩu từ terminal"
+                >
+                <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-sky-600 px-4 py-3 font-bold text-white shadow-lg shadow-sky-900/30 transition hover:brightness-110 active:scale-[0.99]">
+                    <i data-lucide="log-in" class="h-4 w-4"></i>
+                    Đăng nhập
+                </button>
+            </form>
+        </section>
+        <p class="mt-5 text-center text-xs text-slate-500">Phiên đăng nhập tự hết hạn sau 12 giờ.</p>
+    </main>
+    <script>lucide.createIcons();</script>
+</body>
+</html>
