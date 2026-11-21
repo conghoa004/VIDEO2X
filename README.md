@@ -134,53 +134,87 @@ import json
 import subprocess
 from pathlib import Path
 
-print("⏳ [1/4] Installing FFmpeg 7 and Vulkan development packages...")
+print("[1/4] Installing FFmpeg 7 and Vulkan development packages...")
+
 !apt-get update -yqq
 !apt-get install -yqq software-properties-common
 !add-apt-repository -y ppa:ubuntuhandbook1/ffmpeg7
 !apt-get update -yqq
-!apt-get install -yqq --no-install-recommends libvulkan1 libvulkan-dev vulkan-tools ffmpeg mesa-vulkan-drivers
+!apt-get install -yqq --no-install-recommends \
+    libvulkan1 \
+    libvulkan-dev \
+    vulkan-tools \
+    ffmpeg \
+    mesa-vulkan-drivers
 
-print("\n⏳ [2/4] Detecting & installing NVIDIA Vulkan graphics driver (libnvidia-gl)...")
-driver_ver = '535'
+
+print("\n[2/4] Detecting & installing NVIDIA Vulkan graphics driver (libnvidia-gl)...")
+
+driver_ver = "535"
+
 try:
-    smi_out = subprocess.check_output('nvidia-smi', shell=True).decode()
-    m = re.search(r'Driver Version:\s*(\d+)', smi_out)
+    smi_out = subprocess.check_output(
+        "nvidia-smi",
+        shell=True
+    ).decode()
+
+    m = re.search(r"Driver Version:\s*(\d+)", smi_out)
+
     if m:
         driver_ver = m.group(1)
-        print(f"🔍 Detected Driver Version: {driver_ver}")
+        print(f"Detected Driver Version: {driver_ver}")
+
 except Exception:
     pass
 
-!apt-get install -yqq --no-install-recommends libnvidia-gl-{driver_ver} || !apt-get install -yqq --no-install-recommends libnvidia-gl-535
+!apt-get install -yqq --no-install-recommends libnvidia-gl-{driver_ver} \
+    || apt-get install -yqq --no-install-recommends libnvidia-gl-535
 
-print("\n⏳ [3/4] Configuring Vulkan ICD for NVIDIA GPU...")
+
+print("\n[3/4] Configuring Vulkan ICD for NVIDIA GPU...")
+
 icd_dir = Path("/usr/share/vulkan/icd.d")
 icd_dir.mkdir(parents=True, exist_ok=True)
+
 with open(icd_dir / "nvidia_icd.json", "w") as f:
-    json.dump({
-        "file_format_version": "1.0.0",
-        "ICD": {
-            "library_path": "libGLX_nvidia.so.0",
-            "api_version": "1.3.0"
-        }
-    }, f, indent=4)
+    json.dump(
+        {
+            "file_format_version": "1.0.0",
+            "ICD": {
+                "library_path": "libGLX_nvidia.so.0",
+                "api_version": "1.3.0"
+            }
+        },
+        f,
+        indent=4
+    )
 
 !cp -f /usr/share/vulkan/icd.d/nvidia_icd.json /etc/vulkan/icd.d/ 2>/dev/null || true
+
 os.environ["VK_ICD_FILENAMES"] = "/usr/share/vulkan/icd.d/nvidia_icd.json"
 os.environ["__NV_PRIME_RENDER_OFFLOAD"] = "1"
 os.environ["__VK_LAYER_NV_optimus"] = "NVIDIA_only"
+
 !ldconfig
 
-print("\n⏳ [4/4] Installing Video2X v6.2.0...")
-deb_file = "/tmp/video2x.deb"
-!wget -q -O {deb_file} https://github.com/k4yt3x/video2x/releases/download/6.2.0/video2x-linux-ubuntu2204-amd64.deb
-!apt-get install -yqq {deb_file} || (dpkg -i {deb_file} && apt-get install -fyqq)
 
-print("\n🔍 Validating Vulkan & Video2X:")
+print("\n[4/4] Installing Video2X v6.2.0...")
+
+deb_file = "/tmp/video2x.deb"
+
+!wget -q -O {deb_file} \
+    https://github.com/k4yt3x/video2x/releases/download/6.2.0/video2x-linux-ubuntu2204-amd64.deb
+
+!apt-get install -yqq {deb_file} \
+    || (dpkg -i {deb_file} && apt-get install -fyqq)
+
+
+print("\nValidating Vulkan & Video2X:")
+
 !vulkaninfo --summary 2>/dev/null | grep -E "deviceName|driverName" || true
 !video2x --version
-print("\n✅ Setup completed successfully! NVIDIA GPU is ready for Vulkan.")
+
+print("\nSetup completed successfully! NVIDIA GPU is ready for Vulkan.")
 ```
 
 ---
