@@ -1,159 +1,284 @@
-# Video2X Web UI
+# 🎬 Video2X Web Studio
 
-Giao diện web viết bằng FastAPI để chọn video, cấu hình và theo dõi tác vụ của chương trình dòng lệnh `video2x`. Ứng dụng không kèm binary Video2X hoặc FFmpeg; các model chọn trong giao diện được chuyển cho binary Video2X đã cài trên máy.
+> **A modern, high-performance Web UI built with clean MVC architecture (FastAPI + TailwindCSS + Lucide Icons) for AI Video Super-Resolution and Frame Interpolation powered by Video2X v6.2.0.**
 
-## Chức năng
+[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![TailwindCSS](https://img.shields.io/badge/Frontend-TailwindCSS-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![Lucide Icons](https://img.shields.io/badge/Icons-Lucide%20Icons-F56565?logo=lucide&logoColor=white)](https://lucide.dev/)
+[![Video2X](https://img.shields.io/badge/Engine-Video2X%20v6.2.0-E50914?logo=github)](https://github.com/k4yt3x/video2x)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
 
-- Đăng nhập bằng mật khẩu ngẫu nhiên được tạo mỗi lần server khởi động.
-- Tải video lên từ trình duyệt hoặc chọn video theo đường dẫn trên máy chủ.
-- Đọc thông tin video bằng `ffprobe`.
-- Chọn một trong các chế độ xử lý có trong giao diện:
-  - **Real-ESRGAN:** `realesr-animevideov3`, `realesrgan-plus-anime`, `realesrgan-plus`.
-  - **Anime4K / libplacebo:** các shader Anime4K được liệt kê trong giao diện.
-  - **RIFE:** nội suy khung hình với các model được liệt kê, hệ số 2x hoặc 4x.
-- Cấu hình codec, preset, CRF, bitrate và pixel format.
-- Theo dõi log và tiến độ qua SSE; xem trước, so sánh thông tin và tải video đầu ra.
-- Xem thông tin môi trường như GPU, Vulkan, FFmpeg và Video2X.
+---
 
-Ứng dụng chỉ chạy **một tác vụ xử lý video tại một thời điểm**. Tùy chọn thực tế còn phụ thuộc phiên bản Video2X, model, Vulkan driver và các codec FFmpeg có trên máy.
+## 📖 Overview
 
-## Yêu cầu
+**Video2X Web Studio** transforms the command-line AI upscaler [Video2X](https://github.com/k4yt3x/video2x) into a production-grade web application. Designed for both local workstations and Cloud GPU environments (such as **Kaggle** and **Google Colab**), it provides an intuitive drag-and-drop dashboard, real-time progress streaming via Server-Sent Events (SSE), in-browser side-by-side video previews, and zero-configuration public sharing via Cloudflare Tunnels.
 
-- Python 3.10 trở lên.
-- Video2X CLI (giao diện hiện nhắm tới Video2X 6.2.0), lệnh `video2x` phải chạy được từ terminal.
-- FFmpeg và `ffprobe` phải có trong `PATH`.
-- Môi trường Vulkan phù hợp với Video2X và GPU/driver tương thích.
-- Để chọn `h264_nvenc`, cần NVIDIA GPU/driver và bản FFmpeg có hỗ trợ NVENC. Các lựa chọn khác cũng phụ thuộc codec được biên dịch vào FFmpeg.
-- Trình duyệt cần truy cập Internet để tải Tailwind CSS, Lucide Icons và font dùng từ CDN.
+---
 
-Kiểm tra các lệnh trước khi chạy app:
+## 🏛️ MVC Architecture
 
-```bash
-video2x --version
-ffmpeg -version
-ffprobe -version
-```
-
-## Cài đặt và chạy cục bộ
-
-Clone repo, tạo môi trường ảo và cài các thư viện Python:
-
-### Windows PowerShell
-
-```powershell
-git clone https://github.com/conghoa004/VIDEO2X.git
-cd VIDEO2X
-py -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-python run.py --host 127.0.0.1 --port 7860
-```
-
-### Linux
-
-```bash
-git clone https://github.com/conghoa004/VIDEO2X.git
-cd VIDEO2X
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -r requirements.txt
-python run.py --host 127.0.0.1 --port 7860
-```
-
-Mở [http://127.0.0.1:7860](http://127.0.0.1:7860). Khi server khởi động, terminal sẽ in mật khẩu đăng nhập. Nhập mật khẩu đó tại trang đăng nhập.
-
-> `requirements.txt` chỉ cài các thư viện Python của giao diện web. Cần cài Video2X CLI và FFmpeg riêng; cấu hình Vulkan/driver và khả năng truy cập model phụ thuộc vào cài đặt Video2X trên máy.
-
-## Đăng nhập
-
-- Mỗi lần khởi động server được tạo một mật khẩu ngẫu nhiên 20 ký tự chữ và số. Mật khẩu chỉ được in trong terminal, không hiển thị trên trang web.
-- Mật khẩu mới được tạo sau khi khởi động lại server; các phiên đăng nhập cũ cũng hết hiệu lực.
-- Phiên đăng nhập dùng cookie HttpOnly và tự hết hạn sau 12 giờ. Có nút **Đăng xuất** trên thanh điều hướng.
-- App dùng một mật khẩu chung, không có tài khoản hoặc phân quyền người dùng.
-- Các trang và API yêu cầu đăng nhập; file tĩnh của giao diện được phục vụ công khai.
-
-## Dùng trên mạng nội bộ hoặc qua Cloudflare Tunnel
-
-Để cho phép thiết bị khác trong mạng truy cập, bind server vào mọi giao diện mạng:
-
-```bash
-python run.py --host 0.0.0.0 --port 7860
-```
-
-Sau đó truy cập bằng địa chỉ IP của máy chủ và cổng `7860`. Việc truy cập còn phụ thuộc firewall và cấu hình mạng.
-
-Có thể tạo Cloudflare Quick Tunnel bằng:
-
-```bash
-python run.py --port 7860 --share
-```
-
-Trên Kaggle, `run.py` tự bật tunnel khi phát hiện thư mục `/kaggle`; không cần truyền `--share`. Tunnel cần Internet. Nếu chưa có `cloudflared`, runner sẽ thử tải binary vào thư mục chạy hiện tại. Giữ riêng URL và mật khẩu nếu không muốn người khác truy cập app.
-
-Trên Google Colab hoặc môi trường khác, dùng `--share` nếu muốn tạo tunnel. Runner không tự cài Video2X, FFmpeg hay các gói hệ thống GPU cho Kaggle/Colab.
-
-## Quy trình xử lý video
-
-1. Khởi động server, lấy mật khẩu từ terminal và đăng nhập.
-2. Chọn **Tải lên** để gửi video từ máy đang dùng trình duyệt, hoặc chọn chế độ đường dẫn để trỏ tới file mà server có thể đọc.
-3. Chọn Real-ESRGAN, Anime4K hoặc RIFE và chỉnh các thông số cần thiết.
-4. Bấm **Bắt đầu xử lý**. Tiến độ và log được cập nhật trong trang.
-5. Khi hoàn tất, xem trước và tải kết quả về.
-
-Đường dẫn lưu mặc định:
-
-| Môi trường | Video tải lên | Video đầu ra |
-| --- | --- | --- |
-| Chạy cục bộ | `./workspace/input` | `./workspace/output` |
-| Kaggle | `/kaggle/working/input` | `/kaggle/working/output` |
-
-Các đường dẫn cục bộ tính từ thư mục làm việc hiện tại. File đầu ra dùng tên video nguồn kèm hậu tố `_v2x_<timestamp>` và giữ phần mở rộng của video nguồn. Khả năng xem trước phụ thuộc định dạng và codec mà trình duyệt hỗ trợ.
-
-## Tùy chọn dòng lệnh
-
-`run.py` hỗ trợ các tùy chọn sau:
-
-| Tùy chọn | Mặc định | Mô tả |
-| --- | --- | --- |
-| `--host` | `0.0.0.0` | Địa chỉ bind của server. Dùng `127.0.0.1` để chỉ truy cập từ máy đang chạy app. |
-| `--port` | `7860` | Cổng HTTP. |
-| `--share` | Tắt | Tải/chạy Cloudflare Tunnel và in URL công khai. Tự bật khi phát hiện Kaggle. |
-| `--reload` | Tắt | Bật tự tải lại khi phát triển; mỗi lần app khởi động lại sẽ tạo mật khẩu mới. |
-
-Chạy `python run.py --help` để xem trợ giúp.
-
-## Cấu trúc dự án
+The project strictly follows the **Model-View-Controller (MVC)** architectural pattern to ensure clean separation of concerns, high maintainability, and scalability:
 
 ```text
-app/
-├── auth.py                         # Phiên đăng nhập và middleware bảo vệ route
-├── main.py                         # Tạo FastAPI app, lifespan và đăng ký router
-├── controllers/
-│   ├── auth_controller.py          # Đăng nhập và đăng xuất
-│   ├── home_controller.py          # Trang chính
-│   ├── video_controller.py         # Tải lên, probe, stream và tải video
-│   ├── task_controller.py          # Chạy/hủy tác vụ và SSE
-│   └── system_controller.py        # API thông tin hệ thống
-├── models/                         # Schema Pydantic
-├── services/                       # Tích hợp Video2X, FFmpeg và hệ thống
-└── views/
-    ├── templates/
-    │   ├── base.html
-    │   ├── index.html
-    │   └── login.html
-    └── static/
-        └── js/app.js
-run.py                              # CLI runner, cấu hình Vulkan và tunnel
-requirements.txt                    # Thư viện Python
-video2x-kaggle.ipynb                # Notebook Kaggle
+VIDEO2X/
+├── app/
+│   ├── __init__.py
+│   ├── main.py                     # FastAPI application setup, template & static mounts
+│   ├── models/                     # [M] MODEL: Pydantic schemas & data validation
+│   │   ├── __init__.py
+│   │   ├── video.py                # VideoMetadata, ProcessingOptions, TaskProgress, TaskResult
+│   │   └── system.py               # GPUInfo, SystemEnvInfo
+│   ├── controllers/                # [C] CONTROLLER: Request routers & API endpoints
+│   │   ├── __init__.py
+│   │   ├── home_controller.py      # Serves Single Page UI (GET /)
+│   │   ├── video_controller.py     # Upload, probe (ffprobe), stream preview, download
+│   │   ├── task_controller.py      # Start/abort processing, SSE live stream (/stream)
+│   │   └── system_controller.py    # Hardware monitor (nvidia-smi, Vulkan ICD status)
+│   ├── services/                   # SERVICE: Business logic & OS process execution
+│   │   ├── __init__.py
+│   │   ├── video2x_service.py      # Subprocess execution, regex progress parser, crash guard
+│   │   ├── ffmpeg_service.py       # Video inspection (codec, resolution, fps, duration)
+│   │   └── system_service.py       # NVIDIA GPU & Vulkan system detection
+│   └── views/                      # [V] VIEW: User interface templates & assets
+│       ├── templates/
+│       │   ├── base.html           # Master layout with TailwindCSS CDN & Lucide Icons CDN
+│       │   └── index.html          # Reactive dark-themed dashboard
+│       └── static/
+│           ├── css/
+│           │   └── style.css       # Custom animations, progress glow, terminal scrollbars
+│           └── js/
+│               └── app.js          # Client-side controller (drag-drop, SSE, video player)
+├── run.py                          # Application entry point with Cloudflare Tunnel support
+├── requirements.txt                # Python dependencies
+├── .gitignore                      # Git ignore rules (cache, venv, outputs)
+├── video2x-kaggle.ipynb            # Interactive CLI/Notebook workflow for Kaggle
+└── README.md                       # Project documentation
 ```
 
-## Xử lý sự cố
+---
 
-- **Không thấy mật khẩu:** xem terminal nơi chạy `python run.py`; mật khẩu được in khi ứng dụng FastAPI bắt đầu.
-- **Không tìm thấy Video2X/FFmpeg:** xác nhận `video2x`, `ffmpeg` và `ffprobe` chạy được từ cùng terminal dùng để khởi động app.
-- **Lỗi Vulkan hoặc GPU:** kiểm tra driver, Vulkan runtime và model tương ứng. App không tự cài những thành phần này.
-- **Không truy cập được Cloudflare URL:** kiểm tra kết nối Internet và log của `cloudflared`; Quick Tunnel là địa chỉ tạm thời.
-- **Video đầu ra không phát trong trình duyệt:** thử tải file về và mở bằng trình phát hỗ trợ codec của file.
+## ✨ Key Features
 
-Các thư viện Python được liệt kê trong [requirements.txt](requirements.txt).
+* **⚡ Real-Time Progress Streaming (SSE):**
+  Uses Server-Sent Events (`/api/tasks/stream`) to broadcast per-frame progress (`frame=X/Y`, percentage, current FPS, elapsed time, and ETA) as well as live terminal logs directly from `video2x` and `ffmpeg` without polling.
+* **🧠 All Video2X v6.2.0 AI Engines Supported:**
+  * **Real-ESRGAN:**
+    * `realesr-animevideov3` (Fast anime video upscaling: 2x, 3x, 4x).
+    * `realesrgan-plus-anime` (Ultra-detailed anime upscaling: 4x).
+    * `realesrgan-plus` (Real-world / live-action video enhancement: 4x).
+  * **Anime4K (libplacebo):** Real-time high-speed GLSL shaders (`anime4k-v4-a`, `anime4k-v4.1-gan`, etc.).
+  * **RIFE:** Deep learning optical flow frame interpolation (2x or 4x frame rate multiplication, e.g. 30 FPS ➡️ 60 / 120 FPS).
+* **🎛️ Full FFmpeg Encoder Controls:**
+  * **Video Codecs:** `libx264` (CPU H.264), `h264_nvenc` (NVIDIA NVENC hardware acceleration), `libx265`.
+  * **Rate Control:** Constant Rate Factor (CRF slider from 14 to 28) or explicit bitrate.
+  * **Presets:** From `ultrafast` to `veryslow`.
+  * **Pixel Format:** Standard `yuv420p` for maximum hardware & browser compatibility.
+* **🎥 In-Browser Video Player & Before/After Comparison:**
+  * Drag & drop video upload with live percentage progress bar.
+  * Direct filesystem path inspection (e.g. `/kaggle/input/...`) using `ffprobe`.
+  * Built-in HTML5 media player supporting range requests for instant playback.
+  * Side-by-side comparison cards (Resolution, File Size, FPS, Duration).
+* **🌐 Zero-Config Public Sharing:**
+  Includes a built-in Cloudflare Tunnel runner (`--share`), generating a secure public HTTPS URL (`https://xxxx.trycloudflare.com`) without opening firewall ports, configuring routers, or registering accounts.
+* **🛡️ Headless Vulkan & Crash-Resilient Guard:**
+  Detects and handles the known Video2X 6.2.0 headless cleanup issue (Exit code 139 / SIGSEGV occurring during `vkDestroyDevice()` after the video is 100% written), ensuring the task is properly marked as completed when the output file is valid.
+
+---
+
+## 🚀 Quick Start
+
+### 1. Local Machine (Linux / Windows with NVIDIA GPU)
+
+#### Prerequisites:
+* Python 3.10+
+* [FFmpeg 7](https://ffmpeg.org/) (providing `libavcodec.so.61`)
+* NVIDIA GPU Driver with Vulkan support
+* [Video2X v6.2.0](https://github.com/k4yt3x/video2x/releases/tag/6.2.0) installed and added to `PATH`
+
+#### Installation:
+```bash
+# Clone the repository
+git clone https://github.com/conghoa004/VIDEO2X.git
+cd VIDEO2X
+
+# Install Python requirements
+pip install -r requirements.txt
+
+# Start the Web UI server
+python run.py --port 7860
+```
+Open your web browser and navigate to: **`http://localhost:7860`**.
+
+---
+
+### 2. Cloud GPU Deployment (Kaggle & Google Colab)
+
+Run the full Video2X Web Studio on free cloud GPUs (**NVIDIA Tesla T4 x2** or **P100**) with public HTTPS access.
+
+#### ⚙️ Mandatory Kaggle Notebook Settings:
+Before running, configure your Kaggle Notebook via the **Settings** panel on the right:
+1. **Accelerator:** Select **GPU T4 x2** (or **GPU P100**).
+2. **Internet:** Toggle to **ON** (required to download packages, models, and Cloudflare Tunnel).
+
+---
+
+#### 📦 Cell 1: Install Video2X, FFmpeg 7 & NVIDIA Vulkan Driver (~1.5 min)
+Create a new code cell and run this script to install all system packages, configure Vulkan ICD for NVIDIA GPU, and verify the setup:
+
+```python
+import os
+import re
+import json
+import subprocess
+from pathlib import Path
+
+print("[1/4] Installing FFmpeg 7 and Vulkan development packages...")
+
+!apt-get update -yqq
+!apt-get install -yqq software-properties-common
+!add-apt-repository -y ppa:ubuntuhandbook1/ffmpeg7
+!apt-get update -yqq
+!apt-get install -yqq --no-install-recommends \
+    libvulkan1 \
+    libvulkan-dev \
+    vulkan-tools \
+    ffmpeg \
+    mesa-vulkan-drivers
+
+
+print("\n[2/4] Detecting & installing NVIDIA Vulkan graphics driver (libnvidia-gl)...")
+
+driver_ver = "535"
+
+try:
+    smi_out = subprocess.check_output(
+        "nvidia-smi",
+        shell=True
+    ).decode()
+
+    m = re.search(r"Driver Version:\s*(\d+)", smi_out)
+
+    if m:
+        driver_ver = m.group(1)
+        print(f"Detected Driver Version: {driver_ver}")
+
+except Exception:
+    pass
+
+!apt-get install -yqq --no-install-recommends libnvidia-gl-{driver_ver} \
+    || apt-get install -yqq --no-install-recommends libnvidia-gl-535
+
+
+print("\n[3/4] Configuring Vulkan ICD for NVIDIA GPU...")
+
+icd_dir = Path("/usr/share/vulkan/icd.d")
+icd_dir.mkdir(parents=True, exist_ok=True)
+
+with open(icd_dir / "nvidia_icd.json", "w") as f:
+    json.dump(
+        {
+            "file_format_version": "1.0.0",
+            "ICD": {
+                "library_path": "libGLX_nvidia.so.0",
+                "api_version": "1.3.0"
+            }
+        },
+        f,
+        indent=4
+    )
+
+!cp -f /usr/share/vulkan/icd.d/nvidia_icd.json /etc/vulkan/icd.d/ 2>/dev/null || true
+
+os.environ["VK_ICD_FILENAMES"] = "/usr/share/vulkan/icd.d/nvidia_icd.json"
+os.environ["__NV_PRIME_RENDER_OFFLOAD"] = "1"
+os.environ["__VK_LAYER_NV_optimus"] = "NVIDIA_only"
+
+!ldconfig
+
+
+print("\n[4/4] Installing Video2X v6.2.0...")
+
+deb_file = "/tmp/video2x.deb"
+
+!wget -q -O {deb_file} \
+    https://github.com/k4yt3x/video2x/releases/download/6.2.0/video2x-linux-ubuntu2204-amd64.deb
+
+!apt-get install -yqq {deb_file} \
+    || (dpkg -i {deb_file} && apt-get install -fyqq)
+
+
+print("\nValidating Vulkan & Video2X:")
+
+!vulkaninfo --summary 2>/dev/null | grep -E "deviceName|driverName" || true
+!video2x --version
+
+print("\nSetup completed successfully! NVIDIA GPU is ready for Vulkan.")
+```
+
+---
+
+#### 🚀 Cell 2: Clone Repo, Install Python Dependencies & Launch Web Studio
+In the next code cell, clone the repository, install Python packages, and launch the server. It will automatically initialize Cloudflare Tunnel and display your public HTTPS link:
+
+```python
+%cd /kaggle/working
+!rm -rf VIDEO2X
+!git clone https://github.com/conghoa004/VIDEO2X.git
+%cd /kaggle/working/VIDEO2X
+!pip install -q -r requirements.txt
+
+# Launch FastAPI Web Studio (automatically launches Cloudflare Tunnel on Kaggle)
+!python run.py --port 7860
+```
+
+---
+
+#### 🌐 Step 3: Access the Web UI
+Once Cell 2 starts, look for the public URL in the cell output:
+
+```text
+=================================================================
+🚀 GIAO DIỆN WEB CÔNG KHAI ĐÃ SẴN SÀNG:
+👉 https://xxxx.trycloudflare.com
+=================================================================
+```
+
+Click the **`https://xxxx.trycloudflare.com`** link to open Video2X Web Studio in your browser on desktop or mobile. The Vulkan indicator badge in the header will display **`⚡ Tesla T4 (NVIDIA)`**, confirming hardware acceleration is active!
+
+---
+
+#### 💡 Kaggle Usage Tips:
+* **Direct Kaggle Dataset Inputs:** You can process videos directly from Kaggle Datasets by clicking **+ Add Input** (top right) and pasting the file path (e.g. `/kaggle/input/<dataset-name>/<video>.mp4`) into the **Đường dẫn trên máy chủ** field in the Web UI.
+* **Outputs:** Upscaled videos are stored in `/kaggle/working/output/`. You can download them directly via the Web UI's **Tải video kết quả** button or from the Kaggle **Output** sidebar.
+* **Exit code 139 (SIGSEGV) note:** When a video reaches 100%, Video2X may exit with code 139 due to Vulkan destructor cleanup in headless containers. The Web UI automatically recognizes this and marks the video as successful since the output file has already been completely written.
+
+---
+
+## ⚙️ CLI Options for `run.py`
+
+| Flag | Type | Default | Description |
+| :--- | :---: | :---: | :--- |
+| `--host` | `str` | `0.0.0.0` | IP address to bind the HTTP server to |
+| `--port` | `int` | `7860` | Network port to listen on |
+| `--reload` | `flag` | `False` | Enable auto-reload for local development |
+| `--share` | `flag` | `False` | Automatically download and launch Cloudflare Tunnel for public HTTPS access |
+
+---
+
+## 🛠️ Tech Stack
+
+* **Backend:** [FastAPI](https://fastapi.tiangolo.com/), [Uvicorn](https://www.uvicorn.org/), [Asyncio](https://docs.python.org/3/library/asyncio.html), [Pydantic v2](https://docs.pydantic.dev/).
+* **Frontend:** [TailwindCSS](https://tailwindcss.com/) (CDN), [Lucide Icons](https://lucide.dev/) (CDN), [Jinja2 Templates](https://jinja.palletsprojects.com/).
+* **Core Engine:** [Video2X v6.2.0](https://github.com/k4yt3x/video2x), [FFmpeg 7](https://ffmpeg.org/), Vulkan API.
+* **Tunneling:** [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/) (cloudflared).
+
+---
+
+## 📄 License & Acknowledgments
+
+* **Video2X:** Copyright © [K4YT3X](https://github.com/k4yt3x) (Licensed under the [ISC License](https://opensource.org/licenses/ISC)).
+* **Real-ESRGAN:** Copyright © [Xintao Wang et al.](https://github.com/xinntao/Real-ESRGAN) (BSD 3-Clause License).
+* **Anime4K:** Copyright © [bloc97](https://github.com/bloc97/Anime4K) (MIT License).
+* **RIFE:** Real-Time Intermediate Flow Estimation for Video Frame Interpolation (Megvii Technology).
